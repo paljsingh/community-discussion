@@ -1,0 +1,12 @@
+google-api-python-client
+oauth2client
+boto3~=1.14.30
+requests
+virtualenv
+PyYaml~=5.3.1
+ujson~=3.2.0
+flask~=1.1.2
+python-dotenv
+pymongo~=3.11.0
+
+dpath~=2.0.1
