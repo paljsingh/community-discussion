@@ -1,9 +1,9 @@
+#!/usr/bin/env python3
 
-import random
+from flask import Flask, make_response
+import asyncio
+from okta_jwt_verifier import JWTVerifier
 
-from flask import Flask, g, redirect, url_for, make_response
-from flask_oidc import OpenIDConnect
-from okta.client import Client
 import logging.config
 from datetime import datetime
 import uuid
@@ -12,7 +12,7 @@ import jwt
 from users.config import Config
 from users.db import Db
 
-# logging.config.fileConfig("etc/logging.conf")
+logging.config.fileConfig("../logging.conf")
 logger = logging.getLogger(__name__)
 
 config = Config.load()
@@ -21,33 +21,15 @@ db_obj = Db(config.get('db_uri'), config.get('db_name'))
 
 app = Flask(__name__)
 
-app.config["OIDC_CLIENT_SECRETS"] = "client_secrets.json"
-app.config["OIDC_COOKIE_SECURE"] = False
-app.config["OIDC_CALLBACK_ROUTE"] = "/oidc/callback"
-app.config["OIDC_SCOPES"] = ["openid", "email", "profile"]
-
-# for encrypting flask session
-app.config["SECRET_KEY"] = config.get('secret_key')
-
-oidc = OpenIDConnect(app)
-
-client_config = {"orgUrl": config.get('org_url'), "token": config.get('access_token')}
-okta_client = Client(user_config=client_config)
-
-
-# what goes to database directly?
-# low frequency events - user creation, community, user group creation
-
-# what goes to kafka?
-# high frequency events - posts, messages, comments, likes, shares
-
 
 @app.before_request
 def before_request():
-    if oidc.user_loggedin:
-        g.user = okta_client.get_user(oidc.user_getfield("sub"))
-    else:
-        g.user = None
+    pass
+
+
+def verify_jwt_token(jwt_token):
+    jwt_verifier = JWTVerifier(config.get('issuer'), config.get('client_id'), config.get('api_endpoint'))
+    return jwt_verifier.verify_access_token(jwt_token)
 
 
 @app.route("/api/v1/users/new", methods=['POST'])
@@ -94,22 +76,3 @@ def get_all_users():
     print(users)
     # send response
     return make_response(users)
-
-
-
-@app.route("/dashboard")
-@oidc.require_login
-def dashboard():
-    return 'dashboard!'
-
-
-@app.route("/login")
-@oidc.require_login
-def login():
-    return redirect(url_for(".dashboard"))
-
-
-@app.route("/logout")
-def logout():
-    oidc.logout()
-    return redirect(url_for(".index"))
