@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+from typing import Callable
 
 from flask import Flask, make_response
-import asyncio
 from okta_jwt_verifier import JWTVerifier
+from okta_jwt_verifier.exceptions import JWTValidationException
+from flask_cors import CORS
+from flask import request
+
 
 import logging.config
 from datetime import datetime
@@ -20,19 +24,21 @@ db_obj = Db(config.get('db_uri'), config.get('db_name'))
 
 
 app = Flask(__name__)
+CORS(app)
 
 
-@app.before_request
-def before_request():
-    pass
-
-
-def verify_jwt_token(jwt_token):
-    jwt_verifier = JWTVerifier(config.get('issuer'), config.get('client_id'), config.get('api_endpoint'))
-    return jwt_verifier.verify_access_token(jwt_token)
+def verify_jwt_token(func: Callable):
+    # TODO: Support custom jwt tokens.
+    async def wrapper(*args, **kwargs):
+        jwt_token = request.headers.get('Authorization').split(' ')[1]
+        jwt_verifier = JWTVerifier(config.get('issuer'), config.get('client_id'), config.get('audience'))
+        await jwt_verifier.verify_access_token(jwt_token)
+        return func(*args, **kwargs)
+    return wrapper
 
 
 @app.route("/api/v1/users/new", methods=['POST'])
+@verify_jwt_token
 def create_new_user():
     # create a new user - use uuid for unique identifier.
     user_id = 'user-{}'.format(uuid.uuid4())
@@ -56,8 +62,10 @@ def create_new_user():
 
 
 @app.route("/api/v1/users", methods=['GET'])
+@verify_jwt_token
 def get_all_users():
-    # save the user details to the db.
+    # TODO: get user data from cache
+    # TODO: support pagination.
     users = {
         "links": {
             "pagination": {
@@ -73,6 +81,5 @@ def get_all_users():
         },
         "data": [user for user in db_obj.get_collection('users').find()]
     }
-    print(users)
     # send response
     return make_response(users)
