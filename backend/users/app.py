@@ -3,7 +3,6 @@ from typing import Callable
 
 from flask import Flask, make_response
 from okta_jwt_verifier import JWTVerifier
-from okta_jwt_verifier.exceptions import JWTValidationException
 from flask_cors import CORS
 from flask import request
 
@@ -28,17 +27,20 @@ CORS(app)
 
 
 def verify_jwt_token(func: Callable):
-    # TODO: Support custom jwt tokens.
     async def wrapper(*args, **kwargs):
+        print("inside wrapper")
         jwt_token = request.headers.get('Authorization').split(' ')[1]
+        print("inside wrapper jwt token: {}".format(jwt_token))
         jwt_verifier = JWTVerifier(config.get('issuer'), config.get('client_id'), config.get('audience'))
+        print("inside wrapper jwt verifier: {}".format(jwt_verifier))
         await jwt_verifier.verify_access_token(jwt_token)
+        print("inside wrapper verify done")
         return func(*args, **kwargs)
     return wrapper
 
 
-@app.route("/api/v1/users/new", methods=['POST'])
 @verify_jwt_token
+@app.route("/api/v1/users/new", methods=['POST'])
 def create_new_user():
     # create a new user - use uuid for unique identifier.
     user_id = 'user-{}'.format(uuid.uuid4())
@@ -61,8 +63,8 @@ def create_new_user():
     return make_response(user_obj)
 
 
-@app.route("/api/v1/users", methods=['GET'])
 @verify_jwt_token
+@app.route("/api/v1/users", methods=['GET'])
 def get_all_users():
     # TODO: get user data from cache
     # TODO: support pagination.
