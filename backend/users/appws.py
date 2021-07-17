@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import logging.config
 
 from flask_cors import CORS
 
@@ -9,13 +8,8 @@ from common.config import Config
 from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
 
-logging.config.fileConfig('./logging.conf')
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-app = CustomFlask(__name__)
+app = CustomFlask('./logging.conf')
 CORS(app)
-
 config = Config.load()
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)

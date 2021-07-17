@@ -5,3 +5,4 @@ okta_jwt_verifier~=0.1.0
 flask-cors~=3.0.10
 flask[async]~=2.0.1
 PyYAML~=5.4.1
+python-socketio=~5.3.0
