@@ -15,11 +15,6 @@ import Router from 'vue-router'
 import 'semantic-ui-css/semantic.min.css'
 
 import HomeComponent from '@/components/Home'
-//import ProfileComponent from '@/components/Profile'
-//import MessagesComponent from '@/components/Messages'
-//import UsersComponent from '@/components/Users'
-//import CommunitiesComponent from '@/components/Communities'
-//import UserGroupsComponent from '@/components/UserGroups'
 
 import { OktaAuth } from '@okta/okta-auth-js'
 import OktaVue, { LoginCallback } from '@okta/okta-vue'
@@ -100,4 +95,4 @@ const router = new Router({
   ]
 })
 
-export default router
+export default router;

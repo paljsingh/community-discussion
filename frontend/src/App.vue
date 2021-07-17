@@ -10,37 +10,53 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 <template>
-    <div id="app">
-        <div class="ui inverted top fixed menu">
-            <router-link to="/" class="header item">
-                <img class="ui mini image" src="./assets/logo.png" />
-            </router-link>
-            <router-link to="/login" class="header item" v-if="!authState.isAuthenticated">
-                <a class="item" v-on:click="login()">Login</a>
-            </router-link>
-            <router-link to="/profile" class="header item" v-if="authState.isAuthenticated">
-                <a class="item">Profile</a>
-            </router-link>
-            <router-link to="/dashboard" class="header item" v-if="authState.isAuthenticated">
-                <a class="item">Dashboard</a>
-            </router-link>
-        </div>
-        <div class="ui text container">
-            <router-view/>
-        </div>
+  <div id="app">
+    <div class="ui inverted top fixed menu">
+      <router-link to="/" class="header item">
+        <img class="ui mini image" src="./assets/logo.png" />
+      </router-link>
+      <router-link
+        to="/login"
+        class="header item"
+        v-if="!authState.isAuthenticated"
+      >
+        <a class="item" v-on:click="login()">Login</a>
+      </router-link>
+      <router-link
+        to="/profile"
+        class="header item"
+        v-if="authState.isAuthenticated"
+      >
+        <a class="item">Profile</a>
+      </router-link>
+      <router-link
+        to="/dashboard"
+        class="header item"
+        v-if="authState.isAuthenticated"
+      >
+        <a class="item">Dashboard</a>
+      </router-link>
     </div>
+    <div class="ui text container">
+      <router-view />
+    </div>
+  </div>
 </template>
 
 <script>
 export default {
-  name: 'app',
+  name: "app",
   methods: {
-    login () {
-      this.$auth.signInWithRedirect('/')
+    login() {
+      this.$auth.signInWithRedirect("/");
     },
-    async logout () {
-      await this.$auth.signOut()
-    }
+    async logout() {
+      await this.$auth.signOut();
+    },
+  },
+  mounted: async function() {
+      let tokens = await this.$auth.tokenManager.getTokens();
+      this.$store.commit('setToken', tokens.accessToken.accessToken)
   }
-}
+};
 </script>
