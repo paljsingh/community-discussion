@@ -26,7 +26,7 @@
 </template>
 
 <script>
-    import axios from 'axios';
+    import axiosInstance from '../helpers/interceptor.js';
 
     export default {
         name: 'Dashboard',
@@ -49,7 +49,7 @@
             async create_users () {
                 try {
                     for (var i=0; i<this.num_users; i++) {
-                        const response = await axios.post(process.env.VUE_APP_USERS_API_ENDPOINT + '/new');
+                        const response = await axiosInstance.post(process.env.VUE_APP_USERS_API_ENDPOINT + '/new');
                         console.info(response.data)
                         this.new_users.push(response.data.users);
                     }
@@ -61,7 +61,7 @@
             async create_user_groups () {
                 try {
                     for (var i=0; i<self.num_users; i++) {
-                        const response = await axios.post(process.env.VUE_APP_USER_GROUPS_API_ENDPOINT + '/new')
+                        const response = await axiosInstance.post(process.env.VUE_APP_USER_GROUPS_API_ENDPOINT + '/new')
                         this.new_usergroups.append(response.data.usergroups)
                     }
                 } catch (e) {
@@ -72,7 +72,7 @@
             async create_communities () {
                 try {
                     for (var i=0; i<self.num_users; i++) {
-                        const response = await axios.post(process.env.VUE_APP_COMMUNITIES_API_ENDPOINT + '/new')
+                        const response = await axiosInstance.post(process.env.VUE_APP_COMMUNITIES_API_ENDPOINT + '/new')
                         this.new_communitiess.append(response.data.communities)
                     }
                 } catch (e) {
