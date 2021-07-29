@@ -12,30 +12,23 @@
 <template>
   <div id="app">
     <div class="ui inverted top fixed menu">
+      
       <router-link to="/" class="header item">
         <img class="ui mini image" src="./assets/logo.png" />
       </router-link>
-      <router-link
-        to="/login"
-        class="header item"
-        v-if="!authState.isAuthenticated"
-      >
+
+      <router-link v-if="!this.token" to="/login" class="header item">
         <a class="item" v-on:click="login()">Login</a>
       </router-link>
-      <router-link
-        to="/profile"
-        class="header item"
-        v-if="authState.isAuthenticated"
-      >
-        <a class="item">Profile</a>
+      
+      <router-link v-if="this.token" to="/profile" class="header item">
+        <a class="item">Profile > {{this.username}} </a>
       </router-link>
-      <router-link
-        to="/dashboard"
-        class="header item"
-        v-if="authState.isAuthenticated"
-      >
+
+      <router-link v-if="this.token && this.usertype==='okta'" to="/dashboard" class="header item">
         <a class="item">Dashboard</a>
       </router-link>
+
     </div>
     <div class="ui text container">
       <router-view />
@@ -44,19 +37,10 @@
 </template>
 
 <script>
+import authHandler from './auth/index'
+
 export default {
   name: "app",
-  methods: {
-    login() {
-      this.$auth.signInWithRedirect("/");
-    },
-    async logout() {
-      await this.$auth.signOut();
-    },
-  },
-  mounted: async function() {
-      let tokens = await this.$auth.tokenManager.getTokens();
-      this.$store.commit('setToken', tokens.accessToken.accessToken)
-  }
+  mixins: [authHandler],
 };
 </script>

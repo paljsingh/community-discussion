@@ -12,7 +12,7 @@
 
 <template>
     <div class="home" id="home">
-        <div v-if="!authState.isAuthenticated" class="intro">
+        <div v-if="!this.token" class="intro">
             <div class="logo">
                 <img class="image" src="@/assets/logo.png" />
             </div>
@@ -22,11 +22,9 @@
                     a community discussion platform using the <br/>
                     stream processing applications.<br/>
                 </p>
-            </div>
-            <div data-app>
-                <button id="login-button" class="ui primary button" role="button" v-on:click="login()">
+                <v-btn v-on:click="login">
                     Login with Okta
-                </button>
+                </v-btn>
                 <v-tooltip bottom>
                     <template v-slot:activator="{ on, attrs }">
                         <v-icon color="primary" dark v-bind="attrs" v-on="on">mdi-information</v-icon>
@@ -43,13 +41,10 @@
 
             <div data-app>
                 <div class="elem">
-                    <label for="impersonate-text">Paste JWT token </label>
-                    <input type="text" class="ui primary text" id="impersonate-text"/>
-                </div>
-                <div class="elem">
-                    <button id="login-dummy-button" class="ui primary button" role="button" v-on:click="login_dummy()">
+                    <v-text-field dark ref="jwt_token" label="Paste JWT Token" outlined clearable ></v-text-field>
+                    <v-btn v-on:click="login_dummy">
                         Impersonate a Dummy User
-                    </button>
+                    </v-btn>
                     <v-tooltip bottom>
                         <template v-slot:activator="{ on, attrs }">
                             <v-icon color="primary" dark v-bind="attrs" v-on="on">mdi-information</v-icon>
@@ -66,7 +61,7 @@
             </div>
         </div> <!-- !isAuthenticated -->
 
-        <div v-if="authState.isAuthenticated" class="content">
+        <div v-if="this.token" class="content">
             <Navigation />
             <Communities v-if="template_name === 'communities'"/>
             <UserGroups v-if="template_name === 'usergroups'"/>
@@ -78,17 +73,19 @@
 </template>
 
 <script>
+// import Vue from 'vue'
 import Navigation from './Navigation.vue'
 import Communities from './Communities.vue'
 import UserGroups from './UserGroups.vue'
 import Users from './Users.vue'
 import Dashboard from './Dashboard.vue'
 import Profile from './Profile.vue'
+import authHandler from '../auth/index.js';
 
 export default {
     name: 'home',
     props: ['template_name'],
-
+    mixins: [authHandler],
     components: {
         Navigation,
         Communities,
@@ -100,21 +97,11 @@ export default {
     data: function () {
         return {
             claims: '',
-            activetab: 'users'
+            activetab: 'users',
         }
     },
-    mounted () { this.setup() },
-    methods: {
-        async setup () {
-            if (this.authState.isAuthenticated) {
-                this.claims = await this.$auth.getUser()
-            }
-        },
-        login () {
-            this.$auth.signInWithRedirect('/')
-        }
-    }
 }
+
 </script>
 
 <style scoped>
@@ -125,8 +112,8 @@ export default {
 }
 .home .intro {
     position: fixed;
-    width: 40% !important;
-    left: 300px !important;
+    width: 30% !important;
+    left: 350px !important;
     top: 100px;
 }
 .home .content {

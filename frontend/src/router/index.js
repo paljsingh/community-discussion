@@ -38,16 +38,10 @@ const router = new Router({
     {
       path: '/',
       component: HomeComponent,
-      props: {
-        template_name: 'communities',
-      }
     },
     {
       path: '/communities',
       component: HomeComponent,
-      meta: {
-        requiresAuth: true,
-      },
       props: {
         template_name: 'communities',
       }
@@ -55,9 +49,6 @@ const router = new Router({
     {
       path: '/usergroups',
       component: HomeComponent,
-      meta: {
-        requiresAuth: true
-      },
       props: {
         template_name: 'usergroups',
       }
@@ -65,9 +56,6 @@ const router = new Router({
     {
       path: '/users',
       component: HomeComponent,
-      meta: {
-        requiresAuth: true
-      },
       props: {
         template_name: 'users',
       }
@@ -75,9 +63,6 @@ const router = new Router({
     {
       path: '/dashboard',
       component: HomeComponent,
-      meta: {
-        requiresAuth: true
-      },
       props: {
         template_name: 'dashboard',
       }
@@ -85,9 +70,6 @@ const router = new Router({
     {
       path: '/profile',
       component: HomeComponent,
-      meta: {
-        requiresAuth: true
-      },
       props: {
         template_name: 'profile',
       }

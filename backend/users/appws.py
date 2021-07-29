@@ -1,27 +1,31 @@
-#!/usr/bin/env python3
+from flask import Flask
+from flask_socketio import SocketIO
 
-from flask_cors import CORS
+app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*", engineio_logger=True)
 
-from werkzeug.exceptions import HTTPException
-
-from common.config import Config
-from common.customflask import CustomFlask
-from common.customverifier import CustomJWTVerifier
-
-app = CustomFlask('./logging.conf')
-CORS(app)
-config = Config.load()
-for cls in HTTPException.__subclasses__():
-    app.register_error_handler(cls, CustomJWTVerifier.handle_error)
+print("--------started this thing-------------")
 
 
-@app.route("/api/v1/users/new", methods=['POST'])
-@CustomJWTVerifier.verify_jwt_token
-def create_new_user():
-    return app.create_new_user()
+@app.route("/")
+def test():
+    return {"status": "success"}
 
 
-@app.route("/api/v1/users", methods=['GET'])
-@CustomJWTVerifier.verify_jwt_token
-def get_all_users():
-    return app.get_all_users()
+@socketio.on('connect')
+def test_connect():
+    print("client connected")
+
+
+@socketio.on("my event")
+def handle_my_event():
+    print("my event received")
+
+
+@socketio.on('disconnect')
+def test_disconnect():
+    print('Client disconnected')
+
+
+if __name__ == '__main__':
+    socketio.run(app, host="127.0.0.1", port=5001, debug=True)

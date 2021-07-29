@@ -6,8 +6,5 @@ export default {
     issuer: ISSUER,
     redirectUri: window.location.origin + '/login/callback',
     scopes: ['openid', 'profile', 'email']
-  },
-  resourceServer: {
-    messagesUrl: 'http://localhost:8000/api/messages'
   }
 }

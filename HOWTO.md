@@ -20,12 +20,23 @@ Tested on OSX 11.4 with
 
 #### Install Components  
 
+
+Setup a kubernetes cluster
+In Docker preferences -> Kubernetes -> Enable Kubernetes
+
+Ensure docker-desktop is the default context.
+
+
 Mongo db
 > $ brew install mongodb-community  
 > $ brew install mongodb-database-tools  
 > $ mongod -f /usr/local/etc/mongod.conf  
 
 Apache Kafka
+> $ brew install kafka
+> $ brew install zookeeper
+> $ zkServer start
+> $ kafka-server-start /usr/local/etc/kafka/server.properties
 
 Apache Storm
 

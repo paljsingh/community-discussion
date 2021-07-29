@@ -1,6 +1,6 @@
 <template>
     <div class="dashboard-users">
-        <h4>Communities</h4>
+        <h4>Users</h4>
         <label for="text-users">How many users to create?</label>
         <input type="text" id="text-users" v-model="num_communities" placeholder=num_users />
         <button id="button-users" class="ui primary button" role="button" v-on:click="create_users()" >

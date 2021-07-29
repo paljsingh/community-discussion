@@ -1,11 +1,9 @@
 import axios from 'axios'
-import store from '../store/store.js'
-
+import store from '../store/index'
 const axiosInterceptor = axios.create();
-axiosInterceptor.defaults.params = {};
 
 axiosInterceptor.interceptors.request.use(function (config) {
-  let token = store.state.token
+  let token = store.state.account.token
   config.headers['Authorization'] = 'Bearer ' + token
   return config;
 }, function (error) {

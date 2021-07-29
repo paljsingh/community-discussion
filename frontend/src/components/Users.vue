@@ -1,66 +1,110 @@
 <template>
 
     <div class="users">
-        <vuetable ref="vuetable"
-            class="new-users"
-            :api-url="api_url"
-            :fields="fields"
-            :current-page="0"
-            :per-page="20"
-            filter=""
-            data-path="data"
-            pagination-path=""
-            :http-fetch="myFetch"
+        <v-card dark>
+            <v-card-title dark>
+                <v-text-field
+                    v-model="search"
+                    append-icon="mdi-magnify"
+                    label="Search"
+                    single-line
+                    hide-details
+                    dark
+                ></v-text-field>
+            </v-card-title>
+            <v-data-table
+                :items="items"
+                :headers="headers"
+                :options.sync="options"
+                :server-items-length="total"
+                hide-default-header
+                class="elevation-1"
+                loading
+                loading-text="Loading... Please wait"
+                dense
+                :search="search"
+                :footer-props="{
+                    'items-per-page-text':'',
+                    'items-per-page-options': []
+                }"
+                @update:pagination="handlePageChange"
+                dark
             >
-        </vuetable>
+                <template v-slot:[`item.token`]="{item}">
+                    <input type="text" v-model="item.token" hidden>
+                    <v-btn type="button" v-clipboard:copy="item.token" @click="snackbar = true">
+                        <v-icon dark>mdi-content-copy</v-icon>
+                    </v-btn>
+                    <v-snackbar v-model="snackbar" :timeout="timeout">
+                        Token Copied to clipboard.
+                    </v-snackbar>
+                </template>
+            </v-data-table>
+        </v-card>
     </div>
 </template>
 
 <script>
-    import Vuetable from 'vuetable-2';
     import Vue from 'vue';
-    import axios from 'axios';
+    import Vuetable from 'vuetable-2';
+    import VueClipboard from 'vue-clipboard2';
     import axiosInstance from '../helpers/interceptor.js'
     Vue.component('vuetable', Vuetable);
-
+    VueClipboard.config.autoSetContainer = true
+    Vue.use(VueClipboard)
+    
     export default {
         name: 'Users',
+        props: {
+        },
+        watch: {
+            options: {
+                handler() {
+                    this.fetchData();
+                },
+                deep: true
+            }
+        },
         data: function() {
             return {
-                all_users: [],
-                api_url: process.env.VUE_APP_USERS_API_ENDPOINT,
-                fields: [
+                items: [],
+                headers: [
                     {
-                      name: 'name',
-                      title: 'User Name'
+                        text: 'User',
+                        value: 'name',
                     },
                     {
-                      name: 'email',
-                      title: 'Email'
-                    },
-                    {
-                      name: 'token',
-                      title: 'JWT Token'
+                        text: 'Copy JWT Token',
+                        value: 'token',
                     }
                 ],
-                httpOptions: {
-                    headers: this.$auth_header
-                }
+                apiUrl: process.env.VUE_APP_USERS_API_ENDPOINT,
+                search: "",
+                options: {},
+                total: 0,
+                snackbar: false,
+                timeout: 1000,
             }
         },
         methods: {
-            async get_all_users () {
-                try {
-                    const response = await axios.get(this.api_url)
-                    this.all_users = response.data.user
-                } catch (e) {
-                    console.error(e)
-                    this.failed = true
-                }
+            async fetchData() {
+                let response = (await axiosInstance.get(this.apiUrl, {params: this.options})).data;
+                this.items = response.data;
+                this.total = response.pagination.total;
+                this.size = response.pagination.size;
             },
-            async myFetch(apiUrl) {    // eslint
-                return await axiosInstance.get(apiUrl)
-
+            handlePageChange(value) {
+                console.log(value)
+                this.page = value;
+            },
+            // transform(record) {
+            //     return {
+            //         name: record.name,
+            //         token: record.token.substr(0, 50),
+            //     };
+            // },
+            onCopy(e) {
+                e.info.hidden = false;
             },
         }
     };
@@ -71,6 +115,8 @@
 .users {
     position: relative;
     float: left;
-    width: 80%;
+    width: 20%;
+    font-size: 12px;
+    /* background: #000; */
 }
 </style>

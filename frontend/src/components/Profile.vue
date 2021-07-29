@@ -33,15 +33,37 @@
 </template>
 
 <script>
+import { decodeToken } from '@okta/okta-auth-js';
 export default {
   name: 'Profile',
   data () {
     return {
-      claims: []
+      claims: [], 
+      user_type: "dummy"
     }
   },
   async created () {
-    this.claims = await Object.entries(await this.$auth.getUser()).map(entry => ({ claim: entry[0], value: entry[1] }))
+    let token = this.$store.state.account.token;
+    let decoded = decodeToken(token);
+    if (decoded.payload.iss.includes("okta.com/oauth2")) {
+      this.user_type = "okta"
+    }
+    
+    if (this.user_type === "okta" ) {
+      this.claims = await Object.entries(await this.$auth.getUser()).map(entry => ({ claim: entry[0], value: entry[1] }))
+      // update any renewed token to the store.
+      this.$store.commit('login', this.$auth.getAccessToken())
+      this.$store.commit('claims', this.claims)
+    } else {
+      this.claims = [
+        {'claim': 'name', 'value': decoded.payload.name},
+        {'claim': 'email', 'value': decoded.payload.email},
+        {'claim': 'sub', 'value': decoded.payload.sub},
+        {'claim': 'iss', 'value': decoded.payload.iss},
+        {'claim': 'iat', 'value': decoded.payload.iat},
+        {'claim': 'exp', 'value': decoded.payload.exp},
+      ]
+    }
   }
 }
 </script>
@@ -51,5 +73,7 @@ export default {
     position: relative;
     float: left;
     width: 80%;
+    overflow: auto;
+
 }
 </style>
