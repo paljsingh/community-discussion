@@ -18,6 +18,7 @@
 
     export default {
         name: 'UserGroups',
+        props: ['token', 'usertype'],
         data: function() {
             return {
                 all_users: [],

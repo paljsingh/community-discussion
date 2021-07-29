@@ -21,7 +21,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="(claim, index) in claims"
+          v-for="(claim, index) in this.claims"
           :key="index"
         >
           <td>{{claim.claim}}</td>
@@ -34,14 +34,11 @@
 
 <script>
 import { decodeToken } from '@okta/okta-auth-js';
+import authHandler from '../auth/index.js';
+
 export default {
   name: 'Profile',
-  data () {
-    return {
-      claims: [], 
-      user_type: "dummy"
-    }
-  },
+  mixins: [authHandler],
   async created () {
     let token = this.$store.state.account.token;
     let decoded = decodeToken(token);
@@ -50,12 +47,13 @@ export default {
     }
     
     if (this.user_type === "okta" ) {
-      this.claims = await Object.entries(await this.$auth.getUser()).map(entry => ({ claim: entry[0], value: entry[1] }))
+      let claims = await Object.entries(await this.$auth.getUser()).map(entry => ({ claim: entry[0], value: entry[1] }))
       // update any renewed token to the store.
       this.$store.commit('login', this.$auth.getAccessToken())
-      this.$store.commit('claims', this.claims)
+      this.$store.commit('claims', claims)
+      this.$store.commit('usertype', "okta")
     } else {
-      this.claims = [
+      let claims = [
         {'claim': 'name', 'value': decoded.payload.name},
         {'claim': 'email', 'value': decoded.payload.email},
         {'claim': 'sub', 'value': decoded.payload.sub},
@@ -63,6 +61,9 @@ export default {
         {'claim': 'iat', 'value': decoded.payload.iat},
         {'claim': 'exp', 'value': decoded.payload.exp},
       ]
+      this.$store.commit('usertype', "dummy")
+      this.$store.commit('claims', claims)
+
     }
   }
 }

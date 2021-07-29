@@ -19,6 +19,7 @@
 
     export default {
         name: 'Communities',
+        props: ['token', 'usertype'],
         data: function() {
             return {
                 communities: [],

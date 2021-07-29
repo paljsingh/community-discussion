@@ -1,6 +1,5 @@
 <template>
-
-    <div class="users">
+    <v-col class="users">
         <v-card dark>
             <v-card-title dark>
                 <v-text-field
@@ -31,32 +30,29 @@
                 dark
             >
                 <template v-slot:[`item.token`]="{item}">
-                    <input type="text" v-model="item.token" hidden>
-                    <v-btn type="button" v-clipboard:copy="item.token" @click="snackbar = true">
-                        <v-icon dark>mdi-content-copy</v-icon>
-                    </v-btn>
-                    <v-snackbar v-model="snackbar" :timeout="timeout">
-                        Token Copied to clipboard.
-                    </v-snackbar>
+                    <CopyToken :item="item" usertype="" />
                 </template>
             </v-data-table>
         </v-card>
-    </div>
+        <ChatWindow />
+    </v-col>
 </template>
 
 <script>
     import Vue from 'vue';
     import Vuetable from 'vuetable-2';
-    import VueClipboard from 'vue-clipboard2';
-    import axiosInstance from '../helpers/interceptor.js'
+    import axiosInstance from '../helpers/interceptor.js';
+    import CopyToken from './CopyToken.vue';
+    import ChatWindow from './ChatWindow.vue';
     Vue.component('vuetable', Vuetable);
-    VueClipboard.config.autoSetContainer = true
-    Vue.use(VueClipboard)
+    Vue.component('CopyToken', CopyToken);
+    Vue.component('ChatWindow', ChatWindow);
+    import authHandler from '../auth/index.js';
+
     
     export default {
         name: 'Users',
-        props: {
-        },
+        mixins: [authHandler],
         watch: {
             options: {
                 handler() {
@@ -82,8 +78,6 @@
                 search: "",
                 options: {},
                 total: 0,
-                snackbar: false,
-                timeout: 1000,
             }
         },
         methods: {
@@ -96,16 +90,7 @@
             handlePageChange(value) {
                 console.log(value)
                 this.page = value;
-            },
-            // transform(record) {
-            //     return {
-            //         name: record.name,
-            //         token: record.token.substr(0, 50),
-            //     };
-            // },
-            onCopy(e) {
-                e.info.hidden = false;
-            },
+            }
         }
     };
 
@@ -113,9 +98,10 @@
 
 <style scoped>
 .users {
-    position: relative;
-    float: left;
-    width: 20%;
+    position: fixed;
+    width: 250px;
+    left: 200px;
+    top: 60px;
     font-size: 12px;
     /* background: #000; */
 }

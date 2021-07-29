@@ -19,6 +19,7 @@ import HomeComponent from '@/components/Home'
 import { OktaAuth } from '@okta/okta-auth-js'
 import OktaVue, { LoginCallback } from '@okta/okta-vue'
 import authConfig from '@/config'
+import store from '../store/index'
 
 Vue.use(Router)
 
@@ -42,39 +43,55 @@ const router = new Router({
     {
       path: '/communities',
       component: HomeComponent,
-      props: {
-        template_name: 'communities',
-      }
+      props: {template_name: 'communities', token: store.state.account.token, usertype: store.state.account.usertype},
+      meta: { 'isLoggedIn': true},
     },
     {
       path: '/usergroups',
       component: HomeComponent,
-      props: {
-        template_name: 'usergroups',
-      }
+      props: {template_name: 'usergroups', token: store.state.account.token, usertype: store.state.account.usertype},
+      meta: { 'isLoggedIn': true},
     },
     {
       path: '/users',
       component: HomeComponent,
-      props: {
-        template_name: 'users',
-      }
+      props: {template_name: 'users', token: store.state.account.token, usertype: store.state.account.usertype},
+      meta: { 'isLoggedIn': true},
     },
     {
       path: '/dashboard',
       component: HomeComponent,
-      props: {
-        template_name: 'dashboard',
-      }
+      props: {template_name: 'dashboard', token: store.state.account.token, usertype: store.state.account.usertype},
+      meta: { 'isLoggedIn': true, 'isOktaUser': true },
     },
     {
       path: '/profile',
       component: HomeComponent,
-      props: {
-        template_name: 'profile',
-      }
+      props: { template_name: 'profile', token: store.state.account.token, usertype: store.state.account.usertype, claims: store.state.account.token},
+      meta: { 'isLoggedIn': true},
     }
   ]
+})
+
+
+router.beforeEach((to, from, next) => {
+  let flag = true
+  if (to.meta.isLoggedIn) {
+    if (! store.state.account.token) {
+      flag = false
+    }
+  }
+  if (to.meta.isOktaUser) {
+    if (! store.state.account.usertype === 'okta') {
+      flag = false
+    }
+  }
+
+  if (flag) {
+    next()
+  } else {
+    next(false)
+  }
 })
 
 export default router;

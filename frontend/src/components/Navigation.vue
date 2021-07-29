@@ -1,5 +1,5 @@
 <template>
-    <div class="navigation">
+    <v-col class="navigation">
         <v-card>
             <v-navigation-drawer permanent dark color="#123" >
                 <v-list>
@@ -33,7 +33,7 @@
                 </v-list>
             </v-navigation-drawer>
         </v-card>
-    </div>
+    </v-col>
 </template>
 
 <script>
@@ -45,9 +45,9 @@ export default {
 
 <style scoped>
 .navigation {
-    position: relative;
-    float: left;
-    width: 15%;
+    position: fixed;
+    width: 200px;
+    top: 60px;
 }
 
 </style>

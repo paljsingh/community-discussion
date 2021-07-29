@@ -65,7 +65,7 @@
             <Navigation />
             <Communities v-if="template_name === 'communities'"/>
             <UserGroups v-if="template_name === 'usergroups'"/>
-            <Users v-if="template_name === 'users'"/>
+            <Users v-if="template_name === 'users'" />
             <Dashboard v-if="template_name === 'dashboard'"/>
             <Profile v-if="template_name === 'profile'"/>
         </div>
@@ -96,7 +96,6 @@ export default {
     },
     data: function () {
         return {
-            claims: '',
             activetab: 'users',
         }
     },

@@ -1,5 +1,5 @@
 <template>
-    <div class="Dashboard">
+    <div class="Dashboard" v-if="this.usertype === 'okta'">
 
         <p>List of communities</p>
         <div class="field" id="alert" v-if="new_users.length">
@@ -30,6 +30,8 @@
 
     export default {
         name: 'Dashboard',
+        props: ['token', 'usertype'],
+
         data: function() {
             return {
                 users: [],

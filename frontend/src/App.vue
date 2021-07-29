@@ -29,6 +29,10 @@
         <a class="item">Dashboard</a>
       </router-link>
 
+      <router-link v-if="this.token" to="/" class="header item">
+        <a class="item" v-on:click="logout()">Logout</a>
+      </router-link>
+
     </div>
     <div class="ui text container">
       <router-view />

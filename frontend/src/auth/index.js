@@ -8,10 +8,8 @@ export default {
         },
         username() {
             let c = this.$store.state.account.claims;
-            console.log("username/claims - ", this.$store.state.account)
             if (c) {
                 for (let i=0; i<c.length; i++) {
-                    console.log("username - ", c[i])
                     if (c[i].claim === 'name') {
                         return c[i].value;
                     }
@@ -19,7 +17,14 @@ export default {
             } else {
                 return ""
             }
+        },
+        usertype() {
+            return this.$store.state.account.usertype;
+        },
+        claims() {
+            return this.$store.state.account.claims;
         }
+
     },
     methods: {
         async login() {
