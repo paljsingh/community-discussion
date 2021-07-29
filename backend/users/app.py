@@ -1,4 +1,5 @@
 import logging.config
+from typing import List
 
 from flask_cors import CORS
 
@@ -35,7 +36,10 @@ for cls in HTTPException.__subclasses__():
 
 @app.route("/api/v1/users/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
-def create_dummy_user():
+def create_dummy_user(is_admin=False):
+    if not is_admin:
+        return
+
     # create a new dummy user - use uuid for unique identifier.
     user_id = '{}'.format(uuid.uuid4())
     user_name = Faker().name()
@@ -51,7 +55,6 @@ def create_dummy_user():
     }
     # create a JWT token for this user.
     jwt_token = jwt.encode(user_info, conf.get('secret_key'), algorithm="HS256")
-    print("new jwt token".format(jwt_token))
     # save the user details to the db.
     user_obj = {**user_info, 'token': jwt_token, '_id': user_id}
     db.save(user_obj, 'users')
@@ -62,11 +65,12 @@ def create_dummy_user():
 
 @app.route("/api/v1/users", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def get_all_users():
-    users = _get_paginated_records("users")
+def get_all_users(is_admin=False):
+    if not is_admin:
+        users = _get_paginated_records("users", ["_id", "name"])
+    else:
+        users = _get_paginated_records("users")
     # send response
-    print(request.url)
-    print(users['pagination'])
     return app.make_response(users)
 
 
@@ -84,11 +88,6 @@ def _pagination_info(collection_name: str):
     total_records = db.get_collection(collection_name).count()
     items_per_page = _per_page_with_limit()
     current_page = int(request.args.get("page", 1))
-
-    # skip_recoerd = (current_page - 1) * items_per_page
-    # from_record = skip_recoerd + 1
-    # to_record = current_page * items_per_page if current_page * items_per_page <= total_records else total_records
-
     return {
         "total": total_records,
         "itemsPerPage": items_per_page,
@@ -110,10 +109,16 @@ def _get_page_url(current_page: int):
     return res.geturl()
 
 
-def _get_paginated_records(collection_name: str):
+def _get_paginated_records(collection_name: str, include_columns: List = None):
     pinfo = _pagination_info(collection_name)
     skip_records = (pinfo['page'] - 1)*pinfo['itemsPerPage']
-    data = [name for name in db.get_collection(collection_name).find(skip=skip_records, limit=pinfo['itemsPerPage'])]
+    if include_columns:
+        cols_dict = {x: 1 for x in include_columns}
+        data = [name for name in db.get_collection(collection_name).find(
+            {}, cols_dict, skip=skip_records, limit=pinfo['itemsPerPage'])]
+    else:
+        data = [name for name in db.get_collection(collection_name).find(skip=skip_records, limit=pinfo['itemsPerPage'])]
+
     return {
         "pagination": pinfo,
         "data": data

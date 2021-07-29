@@ -24,33 +24,33 @@ class CustomJWTVerifier:
 
             if request.headers.get('Authorization') and ' ' in request.headers.get('Authorization'):
                 jwt_token = request.headers.get('Authorization').split(' ')[1]
-                print(request.headers)
 
                 decoded_token = False
+                is_admin = False
 
                 # try to verify as a dummy user
-                print("trying to authenticate as dummy user")
                 try:
                     decoded_token = jwt.decode(jwt_token, cls.config.get('secret_key'), cls.config.get('algo'))
+                    is_admin = False
+                    print("authenticated as dummy user")
                 except Exception as ex:
                     print("failed to verify as dummy user - {}".format(ex))
 
                 if not decoded_token:
                     # try to verify as okta user
-                    print("trying to authenticate as okta user")
                     try:
                         jwt_verifier = JWTVerifier(
                             cls.config.get('issuer'), cls.config.get('client_id'), cls.config.get('audience'))
                         await jwt_verifier.verify_access_token(jwt_token)
                         # no exception - all is well
                         decoded_token = True
+                        is_admin = True
                         print("authenticated as okta user")
                     except Exception as ex:
                         print("failed to verify as okta user - {}".format(ex))
 
-                print("decode token :{}".format(decoded_token))
                 if decoded_token:
-                    return func(*args, **kwargs)
+                    return func(is_admin=is_admin)
 
                 # raise exception.
                 return raiser(BadRequest)
