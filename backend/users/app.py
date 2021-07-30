@@ -38,6 +38,7 @@ for cls in HTTPException.__subclasses__():
 @CustomJWTVerifier.verify_jwt_token
 def create_dummy_user(is_admin=False):
     if not is_admin:
+        print("/api/v1/users/new needs admin privileges!")
         return
 
     # create a new dummy user - use uuid for unique identifier.
