@@ -1,16 +1,24 @@
 <template>
     <div class="usergroups">
-        <vuetable ref="vuetable"
-            class="new-users"
-            :api-url="'http://127.0.0.1:5000/api/v1/usergroups'"
-            :fields="fields"
-            :current-page="0"
-            :per-page="20"
-            filter=""
-            data-path="usergroups"
-            pagination-path=""
-            >
-        </vuetable>
+        <v-data-table
+            :items="items"
+            :headers="headers"
+            :options.sync="options"
+            :server-items-length="total"
+            hide-default-header
+            class="elevation-1"
+            loading
+            loading-text="Loading... Please wait"
+            dense
+            :search="search"
+            :footer-props="{
+                'items-per-page-text':'',
+                'items-per-page-options': []
+            }"
+            @update:pagination="handlePageChange"
+            dark
+        >
+        </v-data-table>
     </div>
 </template>
 
@@ -44,8 +52,11 @@
 
 <style scoped>
 .usergroups {
-    position: relative;
-    float: left;
-    width: 80%;
+    position: fixed;
+    width: 250px;
+    left: 200px;
+    top: 60px;
+    font-size: 12px;
+    /* background: #000; */
 }
 </style>

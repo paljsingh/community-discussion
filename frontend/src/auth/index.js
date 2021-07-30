@@ -32,8 +32,8 @@ export default {
             let okta_token = this.authState.accessToken.accessToken;
             this.$store.commit('login', okta_token);
 
-            this.claims = await Object.entries(await this.$auth.getUser()).map(entry => ({ claim: entry[0], value: entry[1] }))
-            this.$store.commit('claims', this.claims)      
+            let claims = await Object.entries(await this.$auth.getUser()).map(entry => ({ claim: entry[0], value: entry[1] }))
+            this.$store.commit('claims', claims)      
 
             this.$store.commit("usertype", "okta")
         },
@@ -42,7 +42,7 @@ export default {
             this.$store.commit('login', dummy_token);
 
             let decoded = decodeToken(dummy_token);
-            this.claims = [
+            let claims = [
                 {'claim': 'name', 'value': decoded.payload.name},
                 {'claim': 'email', 'value': decoded.payload.email},
                 {'claim': 'sub', 'value': decoded.payload.sub},
@@ -50,7 +50,7 @@ export default {
                 {'claim': 'iat', 'value': decoded.payload.iat},
                 {'claim': 'exp', 'value': decoded.payload.exp},
               ]
-            this.$store.commit('claims', this.claims)      
+            this.$store.commit('claims', claims)      
 
             this.$store.commit("usertype", "dummy")        
         },

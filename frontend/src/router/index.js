@@ -39,35 +39,37 @@ const router = new Router({
     {
       path: '/',
       component: HomeComponent,
+      props: {template_name: 'profile'},
+
     },
     {
       path: '/communities',
       component: HomeComponent,
-      props: {template_name: 'communities', token: store.state.account.token, usertype: store.state.account.usertype},
+      props: {template_name: 'communities'},
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/usergroups',
       component: HomeComponent,
-      props: {template_name: 'usergroups', token: store.state.account.token, usertype: store.state.account.usertype},
+      props: {template_name: 'usergroups'},
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/users',
       component: HomeComponent,
-      props: {template_name: 'users', token: store.state.account.token, usertype: store.state.account.usertype},
+      props: {template_name: 'users'},
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/dashboard',
       component: HomeComponent,
-      props: {template_name: 'dashboard', token: store.state.account.token, usertype: store.state.account.usertype},
+      props: {template_name: 'dashboard'},
       meta: { 'isLoggedIn': true, 'isOktaUser': true },
     },
     {
       path: '/profile',
       component: HomeComponent,
-      props: { template_name: 'profile', token: store.state.account.token, usertype: store.state.account.usertype, claims: store.state.account.token},
+      props: { template_name: 'profile'},
       meta: { 'isLoggedIn': true},
     }
   ]
