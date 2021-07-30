@@ -14,4 +14,10 @@ for i in ${components[@]}; do
   cd - 1>/dev/null
 done
 
+export WEBSOCKET_PORT=${WEBSOCKET_PORT:-5010}
+cd backend/chat
+python3 app.py &
+cd - 1>/dev/null
+log_files="$log_files backend/chat/logs/c18n.log"
+
 tail -F $(echo $log_files)

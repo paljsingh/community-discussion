@@ -13,6 +13,7 @@
     "vue-advanced-chat": "^0.8.9",
     "vue-clipboard2": "^0.3.1",
     "vue-router": "^3.5.2",
+    "vue-websocket": "^0.2.3",
     "vuejs-jwt": "^1.1.0",
     "vuetable-2": "^1.7.5",
     "vuetify": "^2.5.6",
