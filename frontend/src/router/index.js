@@ -77,7 +77,8 @@ const router = new Router({
 
 
 // ensure the require prequisites as mentioned by meta field are met, before loading this route.
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+
   let flag = true
   if (to.meta.isLoggedIn) {
     if (! store.state.account.token) {
