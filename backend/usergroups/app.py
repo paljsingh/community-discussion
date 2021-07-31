@@ -1,28 +1,16 @@
-import logging.config
 from datetime import datetime
-from flask_cors import CORS
 from werkzeug.exceptions import HTTPException, BadRequest
 from faker import Faker
 from flask import request
 import uuid
 
-from common.config import Config
-from common.db import Db
 from common.pagination import Pagination
 from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
 
-conf = Config.load()
-db = Db(conf.get('db_uri'), conf.get('db_name'))
-
-logging.config.fileConfig('./logging.conf')
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 app = CustomFlask(__name__)
-app.secret_key = conf.get('secret_key')
-
-CORS(app)
+conf = app.conf
+db = app.db
 
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
@@ -33,17 +21,26 @@ for cls in HTTPException.__subclasses__():
 def create_usergroup(is_admin=False):
     # create a new usergroup - use uuid for unique identifier.
     usergroup_id = '{}'.format(uuid.uuid4())
-    usergroup_name = Faker().name()
+    f = Faker()
+    usergroup_name = '{}-{}'.format(f.word(), f.word())
 
     user_id = CustomJWTVerifier.get_userid(CustomJWTVerifier.get_token())
 
-    user_ids = set(user_id)
+    user_ids = set()
+    if not is_admin:
+        user_ids.add(user_id)
+
     try:
-        user_ids.update(request.get_json().get('user_ids'))
+        if request.get_json() and request.get_json().get('user_ids'):
+            user_ids.update(request.get_json().get('user_ids'))
     except BadRequest as ex:
         print("expected json data: {}".format(ex))
 
-    usergroup_users = db.get_collection('users').find({"_id": {"$in": user_ids}})
+    if user_ids:
+        usergroup_users = db.get_collection('users').find({"_id": {"$in": user_ids}})
+    else:
+        usergroup_users = []
+
     usergroup_info = {
         "_id": usergroup_id,
         "name": usergroup_name,

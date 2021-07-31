@@ -1,28 +1,22 @@
 from datetime import datetime
 from faker import Faker
-from flask_cors import CORS
 import jwt
 import logging.config
 import uuid
 from werkzeug.exceptions import HTTPException
 
-from common.config import Config
-from common.db import Db
 from common.pagination import Pagination
 from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
-
-conf = Config.load()
-db = Db(conf.get('db_uri'), conf.get('db_name'))
 
 logging.config.fileConfig('./logging.conf')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = CustomFlask(__name__)
-app.secret_key = conf.get('secret_key')
+conf = app.conf
+db = app.db
 
-CORS(app)
 
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
