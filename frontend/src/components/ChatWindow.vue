@@ -1,69 +1,36 @@
 <template>
     <div class='chatwindow'>
-        <VueChat :current-user-id="currentUserId" :rooms="rooms" single-room :messages="messages"/>
+        <VueChat :current-user-id="user_id" :rooms="rooms" single-room :messages="messages"/>
     </div>
 </template>
 
 <script>
-    import Vue from 'vue';
+    // import Vue from 'vue';
     import VueChat from 'vue-advanced-chat'
     import 'vue-advanced-chat/dist/vue-advanced-chat.css'
     import authHandler from '../auth/index.js';
-    import VueWebsocket from "vue-websocket";
+    // import "jquery";
+    import io from "socket.io";
+    import axiosInstance from '../helpers/interceptor';
+    
+    // import VueWebsocket from "vue-websocket";
 
-    Vue.use(VueWebsocket, process.env.VUE_APP_WEBSOCKET_API_ENDPOINT, {
-        reconnection: false
-    });
+    // Vue.use(VueWebsocket, process.env.VUE_APP_WEBSOCKET_API_ENDPOINT, {
+    //     reconnection: false
+    // });
     
     export default {
         name: 'Users',
         mixins: [authHandler],
+        props: ['target_user'],
         components: {
             VueChat
         },
         data: function() {
             return {
-                rooms: [
-                    {
-                        roomId: 1,
-                        roomName: 'Room 1',
-                        avatar: 'assets/imgs/people.png',
-                        unreadCount: 4,
-                        index: 3,
-                        lastMessage: {
-                            content: 'Last message received',
-                            senderId: 1234,
-                            username: 'John Doe',
-                            timestamp: '10:20',
-                            saved: true,
-                            distributed: false,
-                            seen: false,
-                            new: true
-                        },  // last message
-                        users: [
-                            {
-                                _id: 1234,
-                                username: 'John Doe',
-                                avatar: 'assets/imgs/doe.png',
-                                status: {
-                                    state: 'online',
-                                    lastChanged: 'today, 14:30'
-                                }
-                            },
-                            {
-                                _id: 4321,
-                                username: 'John Snow',
-                                avatar: 'assets/imgs/snow.png',
-                                status: {
-                                    state: 'offline',
-                                    lastChanged: '14 July, 20:00'
-                                }
-                            }
-                        ],  // users
-                        typingUsers: [ 4321 ]
-                    }   // room1
-                ],  // rooms
-                currentUserId: 1234,
+                rooms: [],
+                user_id: this.claims._id,
+                user_name: this.claims.name,
                 messages: [
                     {
                         _id: 7890,
@@ -102,52 +69,86 @@
                 ],     // messages
             };  // return data
         },   // data
+        mounted: function() {
+            // create and fetch a room for chat with target user.
+            let room = axiosInstance.post(process.env.VUE_APP_USER_GROUPS_API_ENDPOINT + "/new", {"users": [this.target_user]});
+            this.rooms = [room];
+        },
         methods: {
             created() {
-                document.querySelector('vue-advanced-chat').currentUserId = this.currentUserId
-                document.querySelector('vue-advanced-chat').rooms = this.rooms
-                document.querySelector('vue-advanced-chat').messages = this.messages
+                document.querySelector('vue-advanced-chat').currentUserId = this.user_id;
+                document.querySelector('vue-advanced-chat').rooms = this.rooms;
+                document.querySelector('vue-advanced-chat').messages = this.messages;
             },
-            add() {
-                // Emit the server side
-                this.$socket.emit("add", { a: 5, b: 3 });
-            },
+            // add() {
+            //     // Emit the server side
+            //     this.$socket.emit("add", { a: 5, b: 3 });
+            // },
  
-            get() {
-                this.$socket.emit("get", { id: 12 }, (response) => {
-                    console.log(response);
-                });
-            }
-        },
-        socket: {
-            // Prefix for event names
-            // prefix: "/counter/",
+            // get() {
+            //     this.$socket.emit("get", { id: 12 }, (response) => {
+            //         console.log(response);
+            //     });
+            // }
+        // },
+    //     socket: {
+    //         // Prefix for event names
+    //         // prefix: "/counter/",
 
-            // If you set `namespace`, it will create a new socket connection to the namespace instead of `/`
-            namespace: "/message",
-            events: {
+    //         // If you set `namespace`, it will create a new socket connection to the namespace instead of `/`
+    //         namespace: "/message",
+    //         events: {
 
-                // Similar as this.$socket.on("changed", (msg) => { ... });
-                // If you set `prefix` to `/counter/`, the event name will be `/counter/changed`
-                //
-                changed(msg) {
-                    console.log("Something changed: " + msg);
-                }
+    //             // Similar as this.$socket.on("changed", (msg) => { ... });
+    //             // If you set `prefix` to `/counter/`, the event name will be `/counter/changed`
+    //             //
+    //             changed(msg) {
+    //                 console.log("Something changed: " + msg);
+    //             }
 
-                /* common socket.io events
-                connect() {
-                    console.log("Websocket connected to " + this.$socket.nsp);
-                },
+    //             /* common socket.io events
+    //             connect() {
+    //                 console.log("Websocket connected to " + this.$socket.nsp);
+    //             },
 
-                disconnect() {
-                    console.log("Websocket disconnected from " + this.$socket.nsp);
-                },
+    //             disconnect() {
+    //                 console.log("Websocket disconnected from " + this.$socket.nsp);
+    //             },
 
-                error(err) {
-                    console.error("Websocket error!", err);
-                }
-                */
-            }
+    //             error(err) {
+    //                 console.error("Websocket error!", err);
+    //             }
+    //             */
+    //         }
+    //     }
+    // }
+        mounted: function() {
+
+            let namespace = '/message';
+            let socket = io(namespace, {transports: ['websocket'], upgrade: false});
+
+            socket.on('connect', function() {
+                socket.emit('event', {data: 'connected to the SocketServer...'});
+            });
+
+            socket.on('response', function(msg, cb) {
+                console.log('<br>' + '<div/> logs #' + msg.count + ': ' + msg.data);
+                if (cb)
+                    cb();
+            });
+            // ('form#emit').submit(function(event) {
+            //     socket.emit('event', {data: '#emit_data'});
+            //     return false;
+            // });
+            // ('form#broadcast').submit(function(event) {
+            //     socket.emit('broadcast', {data: '#broadcast_data'});
+            //     return false;
+            // });
+            // ('form#disconnect').submit(function(event) {
+            //     socket.emit('disconnect');
+            //     return false;
+            // });
         }
     }
+}
 </script>
