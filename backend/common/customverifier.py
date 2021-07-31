@@ -20,7 +20,8 @@ class CustomJWTVerifier:
 
     @classmethod
     def get_userid(cls, token):
-        return jwt.decode(token).get('sub')
+        print("get_userid", jwt.decode(token,  options={"verify_signature": False}).get('sub'))
+        return jwt.decode(token,  options={"verify_signature": False}).get('sub')
 
     @classmethod
     def verify_jwt_token(cls, func: Callable):
