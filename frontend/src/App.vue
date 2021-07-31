@@ -53,7 +53,6 @@ export default {
     if (this.authState && this.authState.accessToken) {
       okta_token = this.authState.accessToken.accessToken;
     }
-    console.log(saved_token, "------------", okta_token);
     if (okta_token && saved_token !== okta_token) {
       console.log("previous token expired, saving new stoken to state.");
       this.save_state();

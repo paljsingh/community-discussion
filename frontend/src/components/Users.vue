@@ -103,12 +103,4 @@
     font-size: 12px;
     /* background: #000; */
 }
-.chatwindow {
-    /* background: #012; */
-    position: fixed;
-    width: 800px;
-    left: 450px;
-    top: 60px;  
-}
-
 </style>

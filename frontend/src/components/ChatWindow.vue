@@ -1,6 +1,6 @@
 <template>
     <div class='chatwindow'>
-        <VueChat :current-user-id="user_id" :rooms="rooms" single-room :messages="messages"/>
+        <VueChat :current-user-id="claims._id" :rooms="rooms" single-room :messages="messages"/>
     </div>
 </template>
 
@@ -8,10 +8,9 @@
     // import Vue from 'vue';
     import VueChat from 'vue-advanced-chat'
     import 'vue-advanced-chat/dist/vue-advanced-chat.css'
-    import authHandler from '../auth/index.js';
-    // import "jquery";
     import io from "socket.io";
     import axiosInstance from '../helpers/interceptor';
+    import authHandler from '../auth/index.js';
     
     // import VueWebsocket from "vue-websocket";
 
@@ -21,16 +20,14 @@
     
     export default {
         name: 'Users',
-        mixins: [authHandler],
         props: ['target_user'],
         components: {
             VueChat
         },
+        mixins: [authHandler],
         data: function() {
             return {
                 rooms: [],
-                user_id: this.claims._id,
-                user_name: this.claims.name,
                 messages: [
                     {
                         _id: 7890,
@@ -76,7 +73,7 @@
         },
         methods: {
             created() {
-                document.querySelector('vue-advanced-chat').currentUserId = this.user_id;
+                document.querySelector('vue-advanced-chat').currentUserId = this.claims._id;
                 document.querySelector('vue-advanced-chat').rooms = this.rooms;
                 document.querySelector('vue-advanced-chat').messages = this.messages;
             },
@@ -152,3 +149,14 @@
     }
 }
 </script>
+
+<style scoped>
+.chatwindow {
+    /* background: #012; */
+    position: fixed;
+    width: 800px;
+    left: 500px;
+    top: 60px;  
+}
+
+</style>
