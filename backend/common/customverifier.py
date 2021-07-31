@@ -15,6 +15,14 @@ class CustomJWTVerifier:
     config = Config.load()
 
     @classmethod
+    def get_token(cls):
+        return request.headers.get('Authorization').split(' ')[1]
+
+    @classmethod
+    def get_userid(cls, token):
+        return jwt.decode(token).get('sub')
+
+    @classmethod
     def verify_jwt_token(cls, func: Callable):
         @wraps(func)
         async def inner(*args, **kwargs):
