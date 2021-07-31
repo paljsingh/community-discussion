@@ -33,7 +33,6 @@
 </template>
 
 <script>
-// import { decodeToken } from '@okta/okta-auth-js';
 import authHandler from '../auth/index.js';
 
 export default {

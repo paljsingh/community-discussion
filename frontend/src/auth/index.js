@@ -23,12 +23,14 @@ export default {
         },
         claims() {
             return this.$store.state.account.claims;
-        }
-
+        },
     },
     methods: {
-        async login() {
+        login() {
             this.$auth.signInWithRedirect('/');
+            this.save_state();
+        },
+        async save_state() {
             let okta_token = this.authState.accessToken.accessToken;
             this.$store.commit('login', okta_token);
 
@@ -56,6 +58,6 @@ export default {
         },
         logout() {
             this.$store.commit('logout')
-        }
+        },
     }
 };
