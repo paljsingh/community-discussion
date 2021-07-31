@@ -24,26 +24,46 @@
 
 <script>
 
+    import axiosInstance from '../helpers/interceptor.js';
+    import authHandler from '../auth/index.js';
+
     export default {
         name: 'UserGroups',
-        props: ['token', 'usertype'],
+        mixins: [authHandler],
+        watch: {
+            options: {
+                handler() {
+                    this.fetchData();
+                },
+                deep: true
+            }
+        },
         data: function() {
             return {
-                all_users: [],
-                fields: [
+                items: [],
+                headers: [
                     {
-                      name: 'name',
-                      title: 'User Group Name'
+                        text: 'User Group',
+                        value: 'name',
                     },
-                    {
-                      name: 'created_by',
-                      title: 'Created By'
-                    },
-                    {
-                      name: 'created_on',
-                      title: 'Created On'
-                    }
-                ]
+                ],
+                apiUrl: process.env.VUE_APP_USERGROUPS_API_ENDPOINT,
+                search: "",
+                options: {},
+                total: 0,
+
+            }
+        },
+        methods: {
+            async fetchData() {
+                let response = (await axiosInstance.get(this.apiUrl)).data;
+                this.items = response.data;
+                this.total = response.pagination.total;
+                this.size = response.pagination.size;
+            },
+            handlePageChange(value) {
+                console.log(value)
+                this.page = value;
             }
         }
     };

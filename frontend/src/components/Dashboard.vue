@@ -9,6 +9,14 @@
             Created {{this.num_users}} users.
         </v-snackbar>
 
+        <h4>User Groups</h4>
+        <v-text-field single-line clearable dark label="Create user groups" v-model="num_usergroups" placeholder="5" />
+        <button id="button-usergroups" class="ui primary button" role="button" v-on:click="create_usergroups()" >
+            Go
+        </button>
+        <v-snackbar v-model="snackbar_usergroups" :timeout="timeout">
+            Created {{this.num_usergroups}} usergroups.
+        </v-snackbar>
 
         <h4>Create Communities</h4>
         <v-text-field single-line clearable dark label="Create communities" v-model="num_communities" placeholder="5" />
@@ -16,17 +24,9 @@
             Go
         </button>
         <v-snackbar v-model="snackbar_communities" :timeout="timeout">
-            Created {{this.num_users}} communities.
+            Created {{this.num_communities}} communities.
         </v-snackbar>
 
-        <h4>User Groups</h4>
-        <v-text-field single-line clearable dark label="Create user groups" v-model="num_usergroups" placeholder="5" />
-        <button id="button-usergroups" class="ui primary button" role="button" v-on:click="create_usergroups()" >
-            Go
-        </button>
-        <v-snackbar v-model="snackbar_usergroups" :timeout="timeout">
-            Created {{this.num_users}} usergroups.
-        </v-snackbar>
     </div>
 
 </template>
@@ -50,9 +50,9 @@
                 new_usergroups: [],
                 new_communities: [],
 
-                num_users: [],
-                num_usergroups: [],
-                num_communities: [],
+                num_users: 0,
+                num_usergroups: 0,
+                num_communities: 0,
 
                 snackbar_users: false,
                 snackbar_communities: false,
@@ -80,12 +80,15 @@
                     this.failed = true
                 }
             },
-            async create_user_groups () {
+            async create_usergroups () {
                 try {
-                    for (var i=0; i<self.num_users; i++) {
-                        const response = await axiosInstance.post(process.env.VUE_APP_USER_GROUPS_API_ENDPOINT + '/new')
-                        this.new_usergroups.append(response.data.usergroups)
+                    for (var i=0; i<this.num_usergroups; i++) {
+                        const response = await axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + '/new')
+                        console.log(response)
+                        this.new_usergroups.push(response.data.usergroups)
                     }
+                    this.num_usergroups = this.new_usergroups.length;
+                    this.snackbar_usergroups = true
                 } catch (e) {
                     console.error(e)
                     this.failed = true
@@ -93,10 +96,13 @@
             },
             async create_communities () {
                 try {
-                    for (var i=0; i<self.num_users; i++) {
+                    for (var i=0; i<this.num_communities; i++) {
                         const response = await axiosInstance.post(process.env.VUE_APP_COMMUNITIES_API_ENDPOINT + '/new')
-                        this.new_communitiess.append(response.data.communities)
+                        this.new_communitiess.push(response.data.communities)
                     }
+                    this.num_communities = this.new_communities.length;
+                    this.snackbar_communities = true
+
                 } catch (e) {
                     console.error(e)
                     this.failed = true
