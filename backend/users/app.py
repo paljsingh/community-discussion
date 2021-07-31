@@ -1,22 +1,16 @@
-import logging.config
-from typing import List
-
-from flask_cors import CORS
-
-from werkzeug.exceptions import HTTPException
-from flask import request
-
-from common.customflask import CustomFlask
-from common.customverifier import CustomJWTVerifier
+from datetime import datetime
 from faker import Faker
+from flask_cors import CORS
+import jwt
+import logging.config
+import uuid
+from werkzeug.exceptions import HTTPException
 
 from common.config import Config
 from common.db import Db
-
-import uuid
-from datetime import datetime
-import jwt
-from urllib.parse import urlparse, ParseResult, parse_qs, urlencode
+from common.pagination import Pagination
+from common.customflask import CustomFlask
+from common.customverifier import CustomJWTVerifier
 
 conf = Config.load()
 db = Db(conf.get('db_uri'), conf.get('db_name'))
@@ -67,60 +61,9 @@ def create_dummy_user(is_admin=False):
 @app.route("/api/v1/users", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
 def get_all_users(is_admin=False):
-    if not is_admin:
-        users = _get_paginated_records("users", ["_id", "name"])
+    if is_admin:
+        users = Pagination.get_paginated_records("users")
     else:
-        users = _get_paginated_records("users")
+        users = Pagination.get_paginated_records("users", ["_id", "name"])
     # send response
     return app.make_response(users)
-
-
-def _per_page_with_limit():
-    """
-    If query parameter exist, return number of items specified in query parameter, subject to a max
-    configurable limit (or hardcoded number 100)
-    :return:
-    """
-    items_per_page = int(request.args.get("itemsPerPage", conf.get("default_per_page", 10)))
-    return min(items_per_page, conf.get('max_per_page', 100))
-
-
-def _pagination_info(collection_name: str):
-    total_records = db.get_collection(collection_name).count()
-    items_per_page = _per_page_with_limit()
-    current_page = int(request.args.get("page", 1))
-    return {
-        "total": total_records,
-        "itemsPerPage": items_per_page,
-        "page": current_page,
-    }
-
-
-def _get_page_url(current_page: int):
-    """
-    Create a new url with page index updated.
-    :param current_page:
-    :return:
-    """
-    u = urlparse(request.url)
-    params = parse_qs(u.query)
-    params['page'] = current_page     # noqa
-    res = ParseResult(scheme=u.scheme, netloc=u.hostname, path=u.path, params=u.params, query=urlencode(params),
-                      fragment=u.fragment)  # noqa  - https://youtrack.jetbrains.com/issue/PY-22102
-    return res.geturl()
-
-
-def _get_paginated_records(collection_name: str, include_columns: List = None):
-    pinfo = _pagination_info(collection_name)
-    skip_records = (pinfo['page'] - 1)*pinfo['itemsPerPage']
-    if include_columns:
-        cols_dict = {x: 1 for x in include_columns}
-        data = [name for name in db.get_collection(collection_name).find(
-            {}, cols_dict, skip=skip_records, limit=pinfo['itemsPerPage'])]
-    else:
-        data = [name for name in db.get_collection(collection_name).find(skip=skip_records, limit=pinfo['itemsPerPage'])]
-
-    return {
-        "pagination": pinfo,
-        "data": data
-    }
