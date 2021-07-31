@@ -1,5 +1,6 @@
 #!/bin/bash
-declare -a components=("users")
+
+declare -a components=("users" "usergroups")
 
 flask_run_port=${FLASK_RUN_PORT:-5000}
 flask_env=${FLASK_ENV:-development}
