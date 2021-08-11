@@ -3,7 +3,7 @@
 # setup virtualenv and python dependencies.
 virtualenv venv
 source venv/bin/activate
-pip3 install -r requirements.txt
+pip3 install -r backend/requirements.txt
 
 # pull kafka/zookeeper images
 docker pull bitnami/zookeeper:latest
