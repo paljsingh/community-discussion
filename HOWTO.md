@@ -32,30 +32,33 @@ Mongo db
 > $ brew install mongodb-database-tools  
 > $ mongod -f /usr/local/etc/mongod.conf  
 
-Apache Kafka
-> $ brew install kafka
-> $ brew install zookeeper
-> $ zkServer start
-> $ kafka-server-start /usr/local/etc/kafka/server.properties
+---
 
-Apache Storm
+Installation
 
-Kafka Streams
+$ ./setup.sh
 
-Mongo gridfs
+This will -
+- pull the docker images for kafka and zookeeper
+- install python dependencies for the backend services
+- install node / vue.js dependencies for the frontend service.
 
-Elastic Search
+---
 
-Redis
+Run
 
-#### Run Backend
+$ ./run.sh
 
-> $ ./run-backend.sh  
-> $ tail -F backend/users/logs/c18n.log  
+This will - 
 
-#### Run Frontend
+- Create a docker network
+- Run zookeeper
+- Run Kafka
+- Run flask server for each of the backend services
+- Run flask/websocket application
+- Run frontend vue.js server
+- Tail the logs for all the components
 
-> $ cd frontend && yarn install && yarn start  
-> 
+---
 
 Visit <http://localhost:8080>
