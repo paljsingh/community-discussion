@@ -1,33 +1,41 @@
 from pymongo import MongoClient
 import logging
+from common.config import Config
 
-logger = logging.getLogger(__name__)
 
+class Db(MongoClient):
+    conf = Config.load()
 
-class Db:
-    def __init__(self, db_uri=None, db_name=None):
-        if db_uri is None or db_name is None:
-            logger.error("db_uri or db_name not provided.")
-            return
+    def __init__(self, **kwargs):
+        super().__init__(self.conf.get('db_uri'), **kwargs)
+        self.logger = logging.getLogger(__name__)
+        self.db = self.get_database(self.conf.get('db_name'))
 
-        client = MongoClient(db_uri)
-        self.db_obj = client[db_name]
+    def save(self, document, collection_name):
+        self.db.get_collection(collection_name).insert(document)
 
-    def get_db(self):
-        return self.db_obj
+    def retrieve(self, collection_name, filters: dict = None, select_columns: dict = None, skip=0, limit=None):
+        if not filters:
+            filters = {}
 
-    def get_collection(self, collection_name):
-        return self.db_obj.get_collection(collection_name)
+        cols_filter = None
+        if select_columns:
+            cols_filter = {x: 1 for x in select_columns}
 
-    def save(self, document, collection_name=None):
-        if collection_name is None:
-            logger.error("no collection name provided.")
-            return
-        self.db_obj.get_collection(collection_name).insert(document)
+        default_per_page = self.conf.get('default_per_page', 10)
+        if not limit:
+            # no limit specified, revert to default.
+            limit = default_per_page
+        else:
+            # restrict to a max limit, do not let users specify an arbitrarily high limit.
+            limit = min(limit, self.conf.get('max_per_page', 100))
 
-    def retrieve(self, filters: dict, collection_name=None):
-        if collection_name is None:
-            logger.error("no collection name provided.")
-            return
-
-        return self.db_obj.get_collection(collection_name).find(filters)
+        return {
+            'data': [x for x in self.db.get_collection(collection_name).find(filters, cols_filter,
+                                                                             skip=skip, limit=limit)],
+            'pagination': {
+                'total': self.db.get_collection(collection_name).count(),
+                'perPage': limit,
+                'currentPage': skip // limit
+            }
+        }

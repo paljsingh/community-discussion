@@ -20,7 +20,6 @@ class CustomJWTVerifier:
 
     @classmethod
     def get_userid(cls, token):
-        print("get_userid", jwt.decode(token,  options={"verify_signature": False}).get('sub'))
         return jwt.decode(token,  options={"verify_signature": False}).get('sub')
 
     @classmethod
@@ -34,13 +33,15 @@ class CustomJWTVerifier:
             if request.headers.get('Authorization') and ' ' in request.headers.get('Authorization'):
                 jwt_token = request.headers.get('Authorization').split(' ')[1]
 
-                decoded_token = False
+                decoded_token = None
                 is_admin = False
+                my_id = None
 
                 # try to verify as a dummy user
                 try:
                     decoded_token = jwt.decode(jwt_token, cls.config.get('secret_key'), cls.config.get('algo'))
                     is_admin = False
+                    my_id = decoded_token.get('sub')
                     print("authenticated as dummy user")
                 except Exception as ex:
                     print("failed to verify as dummy user - {}".format(ex))
@@ -52,14 +53,16 @@ class CustomJWTVerifier:
                             cls.config.get('issuer'), cls.config.get('client_id'), cls.config.get('audience'))
                         await jwt_verifier.verify_access_token(jwt_token)
                         # no exception - all is well
-                        decoded_token = True
                         is_admin = True
+                        decoded_token = True
+                        my_id = cls.get_userid(jwt_token)
                         print("authenticated as okta user")
+                        print(my_id, jwt_token, decoded_token)
                     except Exception as ex:
                         print("failed to verify as okta user - {}".format(ex))
 
                 if decoded_token:
-                    return func(is_admin=is_admin)
+                    return func(my_id=my_id, is_admin=is_admin, *args, **kwargs)
 
                 # raise exception.
                 return raiser(BadRequest)

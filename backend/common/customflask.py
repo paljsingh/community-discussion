@@ -11,8 +11,7 @@ class CustomFlask(Flask):
         self.conf = Config.load()
         self.secret_key = self.conf.get('secret_key')
         CORS(self)
-
-        self.db = Db(self.conf.get('db_uri'), self.conf.get('db_name'))
+        self.db = Db()
 
     # override process_response to suppress default response headers.
     def process_response(self, response):

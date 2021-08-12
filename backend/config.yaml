@@ -14,4 +14,6 @@ token_expiry_in_days: 7
 kafka_endpoint: "localhost:9092"
 zookeeper_endpoint: "localhost:2181"
 
+default_per_page: 10
+max_per_page: 100
 
