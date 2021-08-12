@@ -1,6 +1,6 @@
 <template>
     <div class='chatwindow'>
-        <VueChat :current-user-id="claims._id" :rooms="rooms" single-room :messages="messages"/>
+        <VueChat :current-user-id="currentUserId" :rooms="rooms" :messages="messages" />
     </div>
 </template>
 
@@ -10,7 +10,7 @@
     import 'vue-advanced-chat/dist/vue-advanced-chat.css'
     import io from "socket.io";
     import axiosInstance from '../helpers/interceptor';
-    import authHandler from '../auth/index.js';
+    // import authHandler from '../auth/index.js';
     
     // import VueWebsocket from "vue-websocket";
 
@@ -20,30 +20,52 @@
     
     export default {
         name: 'Users',
-        props: ['target_user'],
+        props: ['selected'],
+        currentUserId: null,
+        watch: {
+            async selected() {
+                let selectedUserId = this.selected[0]._id;
+                let room = await axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + "/new", {"user_ids": [selectedUserId]});
+                let users = []
+                console.log(room, room.data, room.data.users);
+
+                room.data.users.forEach(function(user) {
+                    console.log("adding user_id");
+                    users.append(user._id);
+                });
+                this.rooms = [{'roomId': room.data._id, 'roomName': room.data.name, 'users': users}];
+                console.log(this.rooms);
+                // this.messages = 
+                // document.querySelector('vue-advanced-chat').rooms = this.rooms;
+                // document.querySelector('vue-advanced-chat').messages = this.messages;
+                // document.querySelector('vue-advanced-chat').currentUserId = this.selected[0]._id;
+                // create and fetch a room for chat with target user.
+            }
+        },
         components: {
             VueChat
         },
-        mixins: [authHandler],
         data: function() {
             return {
                 rooms: [],
-                messages: [
-                    {
-                        _id: 7890,
-                        content: 'message 1',
-                        senderId: 1234,
-                        username: 'John Doe',
-                        avatar: 'assets/imgs/doe.png',
-                        date: '13 November',
-                        timestamp: '10:20',
-                        system: false,
-                        saved: true,
-                        distributed: true,
-                        seen: true,
-                        deleted: false,
-                        disableActions: false,
-                        disableReactions: false,
+                claims: {'_id': 1},
+                currentUserId: 0,
+                messages: [],
+                    // {
+                    //     _id: 7890,
+                    //     content: 'message 1',
+                    //     senderId: 1234,
+                    //     username: 'John Doe',
+                    //     avatar: 'assets/imgs/doe.png',
+                    //     date: '13 November',
+                    //     timestamp: '10:20',
+                    //     system: false,
+                    //     saved: true,
+                    //     distributed: true,
+                    //     seen: true,
+                    //     deleted: false,
+                    //     disableActions: false,
+                    //     disableReactions: false,
                         // file: {
                         //   name: 'My File',
                         //   size: 67351,
@@ -53,30 +75,34 @@
                         //   url: 'https://firebasestorage.googleapis.com/...',
                         //   preview: 'data:image/png;base64,iVBORw0KGgoAA...'
                         // },
-                        reactions: {
-                            wink: [
-                                1234, // USER_ID
-                                4321
-                            ],
-                            laughing: [
-                                1234
-                            ]
-                        }   // reaction 1
-                    }   // message 1
-                ],     // messages
+                //         reactions: {
+                //             wink: [
+                //                 1234, // USER_ID
+                //                 4321
+                //             ],
+                //             laughing: [
+                //                 1234
+                //             ]
+                //         }   // reaction 1
+                //     }   // message 1
+                // ],     // messages
             };  // return data
         },   // data
-        mounted: function() {
-            // create and fetch a room for chat with target user.
-            let room = axiosInstance.post(process.env.VUE_APP_USER_GROUPS_API_ENDPOINT + "/new", {"users": [this.target_user]});
-            this.rooms = [room];
+        async mounted() {
+            let response = await axiosInstance.get(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + '?q={"_id": "' + this.claims._id + '"}');
+            this.rooms = response.data.usergroups;
         },
         methods: {
-            created() {
-                document.querySelector('vue-advanced-chat').currentUserId = this.claims._id;
-                document.querySelector('vue-advanced-chat').rooms = this.rooms;
-                document.querySelector('vue-advanced-chat').messages = this.messages;
-            },
+            // handleClick() {
+                //  console.log("handle click", this.selectedUser)
+                // document.querySelector('vue-advanced-chat').currentUserId = this.claims._id;
+                // document.querySelector('vue-advanced-chat').rooms = this.rooms;
+                // document.querySelector('vue-advanced-chat').messages = this.messages;
+                // // create and fetch a room for chat with target user.
+                // let room = axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + "/new", {"users": [this.target_user]});
+                // this.rooms = [room];
+            // },
+
             // add() {
             //     // Emit the server side
             //     this.$socket.emit("add", { a: 5, b: 3 });

@@ -14,27 +14,31 @@
             <v-data-table
                 :items="items"
                 :headers="headers"
+                :search="search"
                 :options.sync="options"
                 :server-items-length="total"
-                hide-default-header
+                :single-select="singleSelect"
+                item-key="name"
+                v-model="selected"
                 class="elevation-1"
-                loading
-                loading-text="Loading... Please wait"
-                dense
-                :search="search"
                 :footer-props="{
                     'items-per-page-text':'',
                     'items-per-page-options': []
                 }"
                 @update:pagination="handlePageChange"
+                @click:row="handleClick"
+                loading-text="Loading... Please wait"
+                loading: true
+                hide-default-header
                 dark
+                dense
             >
                 <template v-slot:[`item.token`]="{item}">
-                    <CopyToken :item="item" usertype="" />
+                    <CopyToken :item="item" />
                 </template>
             </v-data-table>
         </v-card>
-        <ChatWindow />
+        <ChatWindow :selected="selected" />
     </v-col>
 </template>
 
@@ -57,19 +61,23 @@
                     this.fetchData();
                 },
                 deep: true
-            }
+            },
         },
         data: function() {
             return {
                 items: [],
+                singleSelect: false,
+                selected: [],
                 headers: [
                     {
                         text: 'User',
                         value: 'name',
+                        filterable: true,
                     },
                     {
                         text: 'Copy JWT Token',
                         value: 'token',
+                        filterable: false,
                     }
                 ],
                 apiUrl: process.env.VUE_APP_USERS_API_ENDPOINT,
@@ -88,7 +96,11 @@
             handlePageChange(value) {
                 console.log(value)
                 this.page = value;
-            }
+            },
+            handleClick(selectedUser) {
+                this.selected = [selectedUser];
+            },
+
         }
     };
 
