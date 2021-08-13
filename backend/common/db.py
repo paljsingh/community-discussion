@@ -1,41 +1,56 @@
-from pymongo import MongoClient
-import logging
+from pymodm.connection import connect
 from common.config import Config
+from common.utils import FlaskUtils
+from typing import Dict, List
 
 
-class Db(MongoClient):
-    conf = Config.load()
+class Db:
 
-    def __init__(self, **kwargs):
-        super().__init__(self.conf.get('db_uri'), **kwargs)
-        self.logger = logging.getLogger(__name__)
-        self.db = self.get_database(self.conf.get('db_name'))
+    def __init__(self):
+        self.conf = Config.load()
+        self.db = connect(self.conf.get('db_uri'), alias="my-app")
 
-    def save(self, document, collection_name):
-        self.db.get_collection(collection_name).insert(document)
+    def retrieve(self, collection, filters: Dict = None, select_columns: List = None):   # noqa
+        (skip, limit) = FlaskUtils.get_skip_limit()
+        (page, per_page) = FlaskUtils.get_url_args('currentPage', 'perPage')
 
-    def retrieve(self, collection_name, filters: dict = None, select_columns: dict = None, skip=0, limit=None):
-        if not filters:
-            filters = {}
-
-        cols_filter = None
+        query = collection.objects
         if select_columns:
-            cols_filter = {x: 1 for x in select_columns}
+            query = query.only(*select_columns)
 
-        default_per_page = self.conf.get('default_per_page', 10)
-        if not limit:
-            # no limit specified, revert to default.
-            limit = default_per_page
-        else:
-            # restrict to a max limit, do not let users specify an arbitrarily high limit.
-            limit = min(limit, self.conf.get('max_per_page', 100))
+        if filters:
+            query = query.raw(filters)
+
+        items = [x.to_son() for x in query.skip(skip).limit(limit)]
+        total_items = collection.objects.count()
 
         return {
-            'data': [x for x in self.db.get_collection(collection_name).find(filters, cols_filter,
-                                                                             skip=skip, limit=limit)],
+            'data': items,
             'pagination': {
-                'total': self.db.get_collection(collection_name).count(),
-                'perPage': limit,
-                'currentPage': skip // limit
+                'total': total_items,
+                'currentPage': page,
+                'perPage': per_page
             }
         }
+
+    def get(self, collection, id_val=None, filters=None, select_columns=None, to_son=True):     # noqa
+        if id_val is None and filters is None:
+            print("either id_val or filters must be specified.")
+            return
+        query = collection.objects
+
+        if select_columns:
+            query = query.only(*select_columns)
+
+        try:
+            if id_val:
+                item = query.get({'_id': id_val})
+            else:
+                item = query.get(filters)
+            if to_son:
+                return item.to_son()
+            else:
+                return item
+        except collection.DoesNotExist as ex:
+            # no item found
+            return

@@ -2,7 +2,6 @@ from flask_cors import CORS
 from flask import Flask
 
 from common.config import Config
-from common.db import Db
 
 
 class CustomFlask(Flask):
@@ -11,7 +10,6 @@ class CustomFlask(Flask):
         self.conf = Config.load()
         self.secret_key = self.conf.get('secret_key')
         CORS(self)
-        self.db = Db()
 
     # override process_response to suppress default response headers.
     def process_response(self, response):

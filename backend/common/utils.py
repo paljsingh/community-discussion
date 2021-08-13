@@ -1,4 +1,3 @@
-from typing import List
 from urllib.parse import urlparse, parse_qs, ParseResult, urlencode
 from flask import request
 
@@ -46,4 +45,5 @@ class FlaskUtils:
     @staticmethod
     def get_skip_limit():
         per_page, current_page = FlaskUtils.get_url_args('perPage', 'currentPage')
+        per_page = min(per_page, FlaskUtils.conf.get('max_per_page'))
         return per_page * current_page, per_page

@@ -32,11 +32,11 @@ run_mongo() {
   fi
 
   # also create text indexes
-  echo 'db.users.createIndex({name: "text"})' | mongo c18n
-  echo 'db.communities.createIndex({name: "text", tags: "text"})' | mongo c18n
-  echo 'db.usergroups.createIndex({name: "text"})' | mongo c18n
-  echo 'db.posts.createIndex({content: "text"})' | mongo c18n
-  echo 'db.comments.createIndex({content: "text"})' | mongo c18n
+  echo 'db.user.createIndex({name: "text"})' | mongo c18n
+  echo 'db.community.createIndex({name: "text", tags: "text"})' | mongo c18n
+  echo 'db.usergroup.createIndex({name: "text"})' | mongo c18n
+  echo 'db.post.createIndex({content: "text"})' | mongo c18n
+  echo 'db.comment.createIndex({content: "text"})' | mongo c18n
 
 }
 
