@@ -1,3 +1,4 @@
+from typing import List
 from urllib.parse import urlparse, parse_qs, ParseResult, urlencode
 from flask import request
 
@@ -15,7 +16,11 @@ class FlaskUtils:
         'currentPage': {
             'type': int,
             'default': 0
-        }
+        },
+        'name': {
+            'type': str,
+            'default': ''
+        },
     }
 
     @staticmethod

@@ -24,7 +24,23 @@ run_kafka() {
   fi
 }
 
-declare -a components=("users" "usergroups")
+run_mongo() {
+  # run mongo if not already running
+  if ! ps -ef | grep mongo1 | grep -v grep; then
+      mongod -f /usr/local/etc/mongod.conf &
+      sleep 5
+  fi
+
+  # also create text indexes
+  echo 'db.users.createIndex({name: "text"})' | mongo c18n
+  echo 'db.communities.createIndex({name: "text", tags: "text"})' | mongo c18n
+  echo 'db.usergroups.createIndex({name: "text"})' | mongo c18n
+  echo 'db.posts.createIndex({content: "text"})' | mongo c18n
+  echo 'db.comments.createIndex({content: "text"})' | mongo c18n
+
+}
+
+declare -a components=("users" "communities" "usergroups")
 run_backend() {
 
   flask_run_port=${FLASK_RUN_PORT:-5000}
@@ -66,6 +82,7 @@ tail_logs() {
 
 source $PWD/venv/bin/activate
 run_kafka
+run_mongo
 run_backend
 run_frontend
 tail_logs

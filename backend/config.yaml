@@ -8,12 +8,12 @@ db_name: "c18n"
 # custom JWT tokens for dummy users.
 algo: "HS256"
 secret_key: "AQuickBrownFoxJumpsOverTheLazyDog"
-
 token_expiry_in_days: 7
 
 kafka_endpoint: "localhost:9092"
 zookeeper_endpoint: "localhost:2181"
 
+# pagination results
 default_per_page: 10
 max_per_page: 100
 

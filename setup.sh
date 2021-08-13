@@ -9,4 +9,3 @@ pip3 install -r backend/requirements.txt
 docker pull bitnami/zookeeper:latest
 docker pull bitnami/kafka:latest
 
-
