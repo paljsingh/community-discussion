@@ -10,7 +10,7 @@ class Db:
         self.conf = Config.load()
         self.db = connect(self.conf.get('db_uri'), alias="my-app")
 
-    def retrieve(self, collection, filters: Dict = None, select_columns: List = None):   # noqa
+    def retrieve(self, collection, filters: Dict = None, select_columns: List = None, to_son=True, pagination=True):    # noqa
         (skip, limit) = FlaskUtils.get_skip_limit()
         (page, per_page) = FlaskUtils.get_url_args('currentPage', 'perPage')
 
@@ -21,17 +21,20 @@ class Db:
         if filters:
             query = query.raw(filters)
 
-        items = [x.to_son() for x in query.skip(skip).limit(limit)]
+        items = [x.to_son() if to_son else x for x in query.skip(skip).limit(limit)]
         total_items = collection.objects.count()
 
-        return {
-            'data': items,
-            'pagination': {
-                'total': total_items,
-                'currentPage': page,
-                'perPage': per_page
+        if pagination:
+            return {
+                'data': items,
+                'pagination': {
+                    'total': total_items,
+                    'currentPage': page,
+                    'perPage': per_page
+                }
             }
-        }
+        else:
+            return items
 
     def get(self, collection, id_val=None, filters=None, select_columns=None, to_son=True):     # noqa
         if id_val is None and filters is None:
