@@ -1,5 +1,13 @@
+import base64
+from http import HTTPStatus
+from io import BytesIO
+
+from pymodm import MongoModel
+from pymodm.files import File
+from pymodm.fields import CharField, DateTimeField, ImageField, FileField
+from pymongo.write_concern import WriteConcern
+
 from random import Random
-from typing import List
 
 import uuid
 import logging.config
@@ -9,223 +17,168 @@ from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
 from werkzeug.exceptions import HTTPException, abort
 from flask import request
+
+from PIL import Image
+
+from common.db import Db
 from common.utils import FlaskUtils
+from communities.app import Community
+
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = CustomFlask(__name__)
-conf = app.conf
-db = app.db
+app.config['MONGODB_SETTINGS'] = {'host': app.conf.get('db_uri')}
+db = Db()
 
 
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
 
 
-@app.route("/api/v1/communities/new", methods=['POST'])
+@app.route("/api/v1/communities/<community_id>/posts/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
-def create_new_community(my_id, is_admin=False):
+def create_new_post(community_id, my_id, is_admin=False):
 
-    new_community = Community()
-    data = request.get_json()
-    new_community.fake_info().with_created_by(my_id)
-
-    if data and data.get('name'):
-        new_community.with_name(data.get('name'))
-    if data and data.get('tags'):
-        new_community.with_tags(data.get('tags'))
-    new_community.save()
-    return app.make_response(new_community.__dict__())
+    content = request.get_json()
+    new_post = Post(created_by=my_id, content=content, community_id=community_id)
+    new_post.save()
+    return app.make_response(new_post.to_son())
 
 
-@app.route("/api/v1/communities", methods=['GET'])
+@app.route("/api/v1/communities/<community_id>/images/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
-def get_all_communities(my_id, is_admin=False):
-    skip, limit = FlaskUtils.get_skip_limit()
-    communities = db.retrieve("communities", skip=skip, limit=limit)
-    return app.make_response(communities)
+def create_new_image_post(my_id, is_admin=False):
+    allowed_ext = ['png', 'jpg', 'jpeg', 'gif']
+    new_image_post = ImagePost(created_by=my_id)
+    file = request.files['file']
+    ext = file.filename.split('.')[1] if file.filename else None
+    if ext in allowed_ext:
+        new_image_post.file = File(file)
+        new_image_post.save()
+        return app.make_response(new_image_post.to_son())
+    else:
+        abort(HTTPStatus.PRECONDITION_FAILED)
 
 
-@app.route('/api/v1/communities/<community_id>', methods=['GET'])
+@app.route("/api/v1/communities/<community_id>/videos/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
-def get_community(community_id, my_id, is_admin=False):
-    community = db.retrieve("communities", {'_id': community_id}, limit=1)
-    return app.make_response(community)
+def create_new_video_post(my_id, is_admin=False):
+    allowed_ext = ['.mp4', '.mkv', '.mov']
+    new_video_post = VideoPost(created_by=my_id)
+    file = request.files['file']
+    ext = file.filename.split('.')[1] if file.filename else None
+
+    if ext in allowed_ext:
+        new_video_post.file = File(file)
+        new_video_post.save()
+        return app.make_response(new_video_post.to_son())
+    else:
+        abort(HTTPStatus.PRECONDITION_FAILED)
 
 
-@app.route('/api/v1/communities/<community_id>/users/<user_id>', methods=['POST'])
+@app.route("/api/v1/communities/<community_id>/posts", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def invite_user_to_community(community_id, user_id, my_id, is_admin=False):
-    community = db.retrieve("communities", {'_id': community_id}, limit=1)
-    invite = db.retrieve("invites", {'invite_for': 'communities', 'invite_for_resource_id': community_id,
-                                     'invite_by': my_id, 'invite_to': user_id}, limit=1)
-
-    # no such invite exists, create one.
-    if not invite:
-        invite = Invite(community_id, 'communities').with_invite_by(my_id).with_invite_to(user_id)
-        invite.save()
-    resp = app.make_response(community)
-    resp.headers['Location'] = '/api/v1/communities/{}/users/{}/invite/{}'.format(community_id, user_id, invite._id)
-    return resp
+def get_all_posts(community_id, my_id, is_admin=False):
+    posts = db.retrieve(Post, filters={'community_id': community_id})
+    return app.make_response(posts)
 
 
-@app.route('/api/v1/communities/<community_id>/invite/<invite_id>/accept', methods=['PUT'])
+@app.route("/api/v1/communities/<community_id>/images", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def accept_invite_to_community(community_id, invite_id, my_id, is_admin=False):
-    community = db.retrieve("communities", {'_id': community_id}, limit=1)
-
-    # accept the invite
-    invite = db.retrieve("invites", {'_id': invite_id}, limit=1)
-    if invite:
-        invite['status'] = 'accepted'
-        invite['updated_on'] = datetime.utcnow().timestamp()
-        invite.save()
-
-    # add user to the community list
-    community['users'].update(my_id)
-    resp = app.make_response(community)
-    resp.headers['Location'] = '/api/v1/communities/{}'.format(community_id)
-    return resp
+def get_all_image_posts(community_id, my_id, is_admin=False):
+    image_posts = db.retrieve(ImagePost, filters={'community_id': community_id})
+    return app.make_response(image_posts)
 
 
-@app.route('/api/v1/communities/<community_id>/invite/<invite_id>/decline', methods=['PUT'])
+@app.route("/api/v1/communities/<community_id>/videos", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def decline_invite_to_community(community_id, invite_id, my_id, is_admin=False):
-    # decline the invite
-    invite = db.retrieve("invites", {'_id': invite_id}, limit=1)
-    if invite:
-        invite['status'] = 'declined'
-        invite['updated_on'] = datetime.utcnow().timestamp()
-        invite.save()
-
-    return app.make_response({})
+def get_all_video_posts(community_id, my_id, is_admin=False):
+    video_posts = db.retrieve(VideoPost, filters={'community_id': community_id})
+    return app.make_response(video_posts)
 
 
-@app.route('/api/v1/communities/<community_id>/subscribe', methods=['PUT'])
+# TODO: Introduce private posts later.
+@app.route('/api/v1/communities/<community_id>/posts/<post_id>', methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def subscribe_to_community(community_id, my_id, is_admin=False):
-    community = db.retrieve("communities", {'_id': community_id}, limit=1)
+def get_post(community_id, post_id, my_id, is_admin=False):
+    post = db.get(Post, post_id)
+    return app.make_response(post.to_son())
+
+
+@app.route('/api/v1/communities/<community_id>/images/<image_post_id>', methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_image_post(community_id, image_post_id, my_id, is_admin=False):
+    image_post = db.get(ImagePost, image_post_id)
+    return app.make_response(image_post.to_son())
+
+
+@app.route('/api/v1/communities/<community_id>/videos/<video_post_id>', methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_video_post(community_id, video_post_id, my_id, is_admin=False):
+    video_post = db.get(ImagePost, video_post_id)
+    return app.make_response(video_post.to_son())
+
+
+@app.route('/api/v1/communities/<community_id>/posts/search', methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def search_posts(community_id, my_id, is_admin=False):
+    text, = FlaskUtils.get_url_args('text')
+
+    # search for given name in indexed text-fields
+    posts = db.retrieve(Post, {
+        '$text': {
+            '$search': text,
+            '$caseSensitive': False,
+            '$diacriticSensitive': False,   # treat é, ê the same as e
+        }
+    })
 
     # TODO: any history updates / events here.
 
-    # add user to the community list
-    community['users'].update(my_id)
-    resp = app.make_response(community)
-    resp.headers['Location'] = '/api/v1/communities/{}'.format(community_id)
-    return resp
+    return app.make_response(posts)
 
 
-@app.route('/api/v1/communities/<community_id>/unsubscribe', methods=['PUT'])
-@CustomJWTVerifier.verify_jwt_token
-def unsubscribe_to_community(community_id, my_id, is_admin=False):
-    community = db.retrieve("communities", {'_id': community_id}, limit=1)
-
-    # TODO: any history updates / events here.
-
-    # add user to the community list
-    community['users'].remove(my_id)
-    return app.make_response({})
+# TODO
+# api to update community info.
+# api for invite status check.
 
 
-@app.route('/api/v1/communities/search', methods=['PUT'])
-@CustomJWTVerifier.verify_jwt_token
-def unsubscribe_to_community(my_id, is_admin=False):
-    name, tags = FlaskUtils.get_url_args('name', 'tags')
-
-    skip, limit = FlaskUtils.get_skip_limit()
-    communities = db.retrieve('communities', {
-        'name': {'$contains': name},
-        'tags': {'$in': [t for t in tags]},
-        }, limit=limit, skip=skip)
-    # TODO: any history updates / events here.
-
-    return app.make_response(communities)
-
-
-class Community:
-
-    def __init__(self):
-        self._id = '{}'.format(uuid.uuid4())
-        self.name = None
-        self.creation_date = datetime.utcnow().timestamp()
-        self.created_by = None
-        self.tags = set()
-        self.users = set()
-        self.usergroups = set()
-        pass
+class Post(MongoModel):
+    id = CharField(required=True, primary_key=True, default=uuid.uuid4)
+    content = CharField(required=True)
+    created_by = CharField(required=True)
+    community_id = CharField(required=True)
+    creation_date = DateTimeField(required=True, default=datetime.utcnow)
 
     def fake_info(self):
-        f = Faker()
-        self.name = f.name()
-        self.tags = set([f.words() for i in range(Random().randint(1, 5))])
-        return self
+        self.content = Faker().paragraph(nb_sentences=Random().randint(20, 50))
 
-    def save(self):
-        db.save(self.__dict__(), 'communities')
-
-    def with_name(self, name: str):
-        self.name = name
-        return self
-
-    def with_tags(self, tags: List):
-        self.tags = tags
-        return self
-
-    def with_created_by(self, name: str):
-        self.name = name
-        return self
-
-    def __dict__(self):
-        return {
-            '_id': self._id,
-            'name': self.name,
-            'tags': ', '.join(self.tags),
-            'creation_date': self.creation_date,
-            'created_by': self.created_by,
-            'users': self.users,
-            'usergroups': self.usergroups
-        }
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'my-app'
 
 
-class Invite:
+class ImagePost(Post):
+    file = ImageField(required=True)
 
-    def __init__(self, resource_id, resource_type):
-        self._id = '{}'.format(uuid.uuid4())
-        self.invite_for = resource_type     # 'community', 'usergroup' ...
-        self.invite_for_resource_id = resource_id   # id of the community / usergroup / ..
-        self.creation_date = datetime.utcnow().timestamp()
-        self.status = 'pending'
-        self.updated_on = datetime.utcnow().timestamp()
-        self.invite_by = None
-        self.invite_to = None
-        pass
+    # TODO: move the fake image generation to an external tool.
+    # def fake_info(self):
+    #     r = Random()
+    #     f = Faker()
+    #     self.file = Image.new('RGB', (100, 100), color=(r.randint(1, 255), r.randint(1, 255), r.randint(1, 255)))
+    #     self.file.save('{}.png'.format(f.word()))
 
-    def save(self):
-        db.save(self.__dict__(), 'invites')
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'my-app'
 
-    def with_invite_by(self, invite_by: str):
-        self.invite_by = invite_by
-        return self
 
-    def with_invite_to(self, invite_to: str):
-        self.invite_to = invite_to
-        return self
+class VideoPost(Post):
+    file = FileField(required=True)
 
-    def __dict__(self):
-        return {
-            '_id': self._id,
-            'creation_date': self.creation_date,
-            'invite_by': self.invite_by,
-            'invite_to': self.invite_to,
-            'invite_for': self.invite_for,
-            'invite_for_resource_id': self.invite_for_resource_id,
-            'status': self.status,
-            'updated_on': self.updated_on
-        }
-
-    @staticmethod
-    def get(filters):
-        skip, limit = FlaskUtils.get_skip_limit()
-        db.retrieve('invites', filters=filters, skip=skip, limit=limit)
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'my-app'

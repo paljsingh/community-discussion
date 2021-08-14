@@ -165,8 +165,8 @@ def search_community(my_id, is_admin=False):
     return app.make_response(communities)
 
 # TODO
-# api to update community info
-#
+# api to update community info.
+# api for invite status check.
 
 
 class Community(MongoModel):
@@ -219,4 +219,3 @@ class Invite(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'my-app'
-
