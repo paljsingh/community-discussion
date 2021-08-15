@@ -1,5 +1,5 @@
 <template>
-  <div class="home" v-if="!isLoggedIn">
+  <div class="home" v-if="!this.isLoggedIn">
     <div class="logo">
       <img class="image" src="@/assets/logo.png" />
     </div>
@@ -55,16 +55,11 @@ import { decodeToken } from "@okta/okta-auth-js";
 
 export default {
   name: 'home',
-  props: ['template_name'],
   mixins: [authHelper],
-  data: function () {
-      return {
-          activetab: 'users',
-      }
-  },
   methods: {
     async login () {
       await this.$auth.signInWithRedirect({ originalUri: '/profile' })
+      localStorage.setItem('usertype', "okta");
     },
     login_dummy () {
       let dummy_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiRWxpemFiZXRoIEJhbmtzIiwic3ViIjoiNzdlYjBiZTAtMDU5MC00ZmIwLWFhN2EtNjA4OWUyYmFkZmY1IiwiZW1haWwiOiJlbGl6YWJldGhfYmFua3NAbG9jYWxob3N0Iiwicm9sZSI6InVzZXIiLCJ2ZXIiOjEsImlzcyI6InB5dGhvbi9mbGFzayIsImlhdCI6MTYyODgzMzI0NC43ODU5MzUsImV4cCI6MTYyOTQzODA0NC43ODU5NDF9.shXLAM0M7iZ4a2fP9o4glZspslcwNHRyRLVN7DufQfQ'
@@ -79,11 +74,11 @@ export default {
               {'claim': 'exp', 'value': decoded.payload.exp},
           ]
           // save the token.
-          localStorage.setItem('dummy-jwt-token', JSON.stringify(dummy_token));
+          localStorage.setItem('dummy-jwt-token', dummy_token);
           localStorage.setItem('claims', JSON.stringify(claims));
           localStorage.setItem('usertype', "dummy");
-          this.force_update;
-          this.$router.push('/')
+          this.force_update
+          this.$router.push('/profile')
           this.$router.go()
       } else {
           console.log("token has expired")

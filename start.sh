@@ -39,13 +39,13 @@ run_mongo() {
       xemuliam/mongo
   fi
 
+  echo "creating mongo indexes"
   sleep 5
-  # also create text indexes
-  echo 'db.user.createIndex({name: "text"})' | mongo c18n
-  echo 'db.community.createIndex({name: "text", tags: "text"})' | mongo c18n
-  echo 'db.usergroup.createIndex({name: "text"})' | mongo c18n
-  echo 'db.post.createIndex({content: "text"})' | mongo c18n
-  echo 'db.comment.createIndex({content: "text"})' | mongo c18n
+  echo 'db.user.createIndex({name: "text"})' | mongo c18n 1>/dev/null
+  echo 'db.community.createIndex({name: "text", tags: "text"})' | mongo c18n 1>/dev/null
+  echo 'db.usergroup.createIndex({name: "text"})' | mongo c18n 1>/dev/null
+  echo 'db.post.createIndex({content: "text"})' | mongo c18n 1>/dev/null
+  echo 'db.comment.createIndex({content: "text"})' | mongo c18n 1>/dev/null
 
 }
 
@@ -58,14 +58,14 @@ run_backend() {
   for i in ${components[@]}; do
     cd "backend/$i" 1>/dev/null
     echo "running backend component '$i' on port $flask_run_port ..."
-    FLASK_ENV=$flask_env FLASK_RUN_PORT=$flask_run_port FLASK_APP=app.py flask run 2>&1 1>/dev/null &
+    FLASK_ENV=$flask_env FLASK_RUN_PORT=$flask_run_port FLASK_APP=app.py flask run &
     flask_run_port=$(expr $flask_run_port + 1)
     cd - 1>/dev/null
   done
 
   export WEBSOCKET_PORT=${WEBSOCKET_PORT:-5010}
   cd backend/chat
-  python3 app.py 2>&1 1>/dev/null &
+  python3 app.py  &
   cd - 1>/dev/null
 }
 

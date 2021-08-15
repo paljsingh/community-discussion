@@ -23,7 +23,7 @@
 </template>
 
 <script>
-    import axios from 'axios';
+    import axios from '../helpers/interceptor';
 
     export default {
         name: 'Communities',
@@ -50,33 +50,9 @@
                 total: 0,
             }
         },
-        // data: function() {
-        //     return {
-        //         communities: [],
-        //         fields: [
-        //             {
-        //               name: 'name',
-        //               title: 'Community Name'
-        //             },
-        //             {
-        //               name: 'description',
-        //               title: 'Description'
-        //             },
-        //             {
-        //               name: 'created_by',
-        //               title: 'Created By'
-        //             },
-        //             {
-        //               name: 'created_on',
-        //               title: 'Created On'
-        //             },
-        //             {
-        //               name: 'join',
-        //               title: 'Join Community'
-        //             },
-        //         ]
-        //     }
-        // },
+        created() {
+            this.force_update;
+        },
         methods: {
             async get_communities () {
                 try {

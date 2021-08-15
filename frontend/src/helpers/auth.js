@@ -8,13 +8,13 @@ export default {
         force_update() {
             this.force_update_counter += 1;
         },
-        async token() {
+        token() {
             this.force_update_counter;
-            if (this.usertype == 'dummy') {
+            if (this.usertype === "dummy") {
                 return localStorage.getItem('dummy-jwt-token')
             }
-            if (this.usertype == 'okta') {
-                return await this.$auth.tokenManager.get('idToken')
+            if (this.usertype === "okta") {
+                return this.$auth.tokenManager.get("idToken")
             }
         },
         username() {
@@ -22,7 +22,7 @@ export default {
             let c = this.claims;
             if (c) {
                 for (let i=0; i<c.length; i++) {
-                    if (c[i].claim === 'name') {
+                    if (c[i].claim === "name") {
                         return c[i].value;
                     }
                 }
@@ -40,7 +40,7 @@ export default {
         },
         isLoggedIn() {
             this.force_update_counter;
-            if (this.usertype) {
+            if (this.usertype !== null) {
                 return true
             } else {
                 return false

@@ -14,12 +14,12 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import 'semantic-ui-css/semantic.min.css'
 
-import Home from '@/components/Home'
-import Profile from '@/components/Profile'
-import Users from '@/components/Users'
-import UserGroups from '@/components/UserGroups'
-import Communities from '@/components/Communities'
-import Dashboard from '@/components/Dashboard'
+import HomeComponent from '../components/Home.vue'
+import ProfileComponent from '../components/Profile.vue'
+import UsersComponent from '../components/Users.vue'
+import UserGroupsComponent from '../components/UserGroups.vue'
+import CommunitiesComponent from '../components/Communities.vue'
+import DashboardComponent from '../components/Dashboard.vue'
 
 import { OktaAuth } from '@okta/okta-auth-js'
 import OktaVue, { LoginCallback } from '@okta/okta-vue'
@@ -33,6 +33,14 @@ Vue.use(OktaVue, { oktaAuth })
 
 const router = new Router({
   mode: 'history',
+  components: {
+    HomeComponent,
+    ProfileComponent,
+    UsersComponent,
+    UserGroupsComponent,
+    CommunitiesComponent,
+    DashboardComponent
+  },
   routes: [
     {
       // handles OAuth callback
@@ -42,31 +50,31 @@ const router = new Router({
     // default path
     {
       path: '/',
-      component: Home,
+      component: HomeComponent,
     },
     {
       path: '/communities',
-      component: Communities,
+      component: CommunitiesComponent,
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/usergroups',
-      component: UserGroups,
+      component: UserGroupsComponent,
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/users',
-      component: Users,
+      component: UsersComponent,
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/dashboard',
-      component: Dashboard,
+      component: DashboardComponent,
       meta: { 'isLoggedIn': true, 'isOktaUser': true },
     },
     {
       path: '/profile',
-      component: Profile,
+      component: ProfileComponent,
       meta: { 'isLoggedIn': true},
     }
   ]

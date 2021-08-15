@@ -38,6 +38,14 @@ import authHelper from '../helpers/auth.js';
 export default {
   name: 'Profile',
   mixins: [authHelper],
+  async created() {
+    if (this.usertype === "okta" && this.claims == null) {
+      let idToken = await this.$auth.tokenManager.get('idToken')
+      let claims = await Object.entries(idToken.claims).map(entry => ({ claim: entry[0], value: entry[1] }))
+      localStorage.setItem('claims', JSON.stringify(claims));
+      this.force_update
+    }
+  }
 }
 </script>
 
