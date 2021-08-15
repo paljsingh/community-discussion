@@ -19,15 +19,14 @@ import router from './router'
 import vuetify from '@/plugins/vuetify'
 import '@/assets/style.css'
 
+
 Vue.config.productionTip = false
-import store from './store/index'
 
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
   router,
   vuetify,
-  store,
   template: '<App/>',
   components: { App }
 })

@@ -33,11 +33,11 @@
 </template>
 
 <script>
-import authHandler from '../auth/index.js';
+import authHelper from '../helpers/auth.js';
 
 export default {
   name: 'Profile',
-  mixins: [authHandler],
+  mixins: [authHelper],
 }
 </script>
 

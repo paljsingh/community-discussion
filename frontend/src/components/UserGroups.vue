@@ -25,11 +25,11 @@
 <script>
 
     import axiosInstance from '../helpers/interceptor.js';
-    import authHandler from '../auth/index.js';
+    import authHelper from '../helpers/auth.js';
 
     export default {
         name: 'UserGroups',
-        mixins: [authHandler],
+        mixins: [authHelper],
         watch: {
             options: {
                 handler() {

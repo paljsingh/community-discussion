@@ -45,12 +45,12 @@
 <script>
     import axiosInstance from '../helpers/interceptor.js';
     import CopyToken from './CopyToken.vue';
-    import authHandler from '../auth/index.js';
+    import authHelper from '../helpers/auth.js';
     import ChatWindow from './ChatWindow.vue'; 
 
     export default {
         name: 'Users',
-        mixins: [authHandler],
+        mixins: [authHelper],
         components: {
             CopyToken,
             ChatWindow    

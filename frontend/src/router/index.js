@@ -14,12 +14,16 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import 'semantic-ui-css/semantic.min.css'
 
-import HomeComponent from '@/components/Home'
+import Home from '@/components/Home'
+import Profile from '@/components/Profile'
+import Users from '@/components/Users'
+import UserGroups from '@/components/UserGroups'
+import Communities from '@/components/Communities'
+import Dashboard from '@/components/Dashboard'
 
 import { OktaAuth } from '@okta/okta-auth-js'
 import OktaVue, { LoginCallback } from '@okta/okta-vue'
 import authConfig from '@/config'
-import store from '../store/index'
 
 Vue.use(Router)
 
@@ -38,64 +42,57 @@ const router = new Router({
     // default path
     {
       path: '/',
-      component: HomeComponent,
-      props: {template_name: 'profile'},
-
+      component: Home,
     },
     {
       path: '/communities',
-      component: HomeComponent,
-      props: {template_name: 'communities'},
+      component: Communities,
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/usergroups',
-      component: HomeComponent,
-      props: {template_name: 'usergroups'},
+      component: UserGroups,
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/users',
-      component: HomeComponent,
-      props: {template_name: 'users'},
+      component: Users,
       meta: { 'isLoggedIn': true},
     },
     {
       path: '/dashboard',
-      component: HomeComponent,
-      props: {template_name: 'dashboard'},
+      component: Dashboard,
       meta: { 'isLoggedIn': true, 'isOktaUser': true },
     },
     {
       path: '/profile',
-      component: HomeComponent,
-      props: { template_name: 'profile'},
+      component: Profile,
       meta: { 'isLoggedIn': true},
     }
   ]
 })
 
 
-// ensure the require prequisites as mentioned by meta field are met, before loading this route.
 router.beforeEach(async (to, from, next) => {
-
-  let flag = true
-  if (to.meta.isLoggedIn) {
-    if (! store.state.account.token) {
-      flag = false
-    }
-  }
-  if (to.meta.isOktaUser) {
-    if (! store.state.account.usertype === 'okta') {
-      flag = false
-    }
-  }
-
-  if (flag) {
-    next()
+  if (to.matched.some((record) => record.meta.isLoggedIn)) {
+      if (isAuthenticated()) {
+          next()
+      } else {
+          next('/')
+      }
   } else {
-    next(false)
+      next()
   }
 })
+
+function isAuthenticated() {
+  let authenticated = false
+  if(localStorage.getItem('dummy-jwt-token')) {
+      authenticated = true
+  } else if (localStorage.getItem('okta-token-storage')) {
+      authenticated = true
+  }
+  return authenticated
+}
 
 export default router;

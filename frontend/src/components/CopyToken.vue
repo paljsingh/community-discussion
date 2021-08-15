@@ -16,11 +16,11 @@
     import VueClipboard from 'vue-clipboard2';
     VueClipboard.config.autoSetContainer = true
     Vue.use(VueClipboard)
-    import authHandler from '../auth/index.js';
+    import authHelper from '../helpers/auth.js';
 
     export default {
         name: 'CopyToken',
-        mixins: [authHandler],
+        mixins: [authHelper],
         props: ['item'],
         data: function() {
             return {

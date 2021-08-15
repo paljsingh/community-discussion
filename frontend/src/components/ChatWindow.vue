@@ -88,10 +88,10 @@
                 // ],     // messages
             };  // return data
         },   // data
-        async mounted() {
-            let response = await axiosInstance.get(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + '?q={"_id": "' + this.claims._id + '"}');
-            this.rooms = response.data.usergroups;
-        },
+        // async mounted() {
+        //     let response = await axiosInstance.get(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + '?q={"_id": "' + this.claims._id + '"}');
+        //     this.rooms = response.data.usergroups;
+        // },
         methods: {
             // handleClick() {
                 //  console.log("handle click", this.selectedUser)

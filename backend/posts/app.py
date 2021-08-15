@@ -1,6 +1,4 @@
-import base64
 from http import HTTPStatus
-from io import BytesIO
 
 from pymodm import MongoModel
 from pymodm.files import File
@@ -22,7 +20,6 @@ from PIL import Image
 
 from common.db import Db
 from common.utils import FlaskUtils
-from communities.app import Community
 
 
 logging.config.fileConfig('../logging.conf')
