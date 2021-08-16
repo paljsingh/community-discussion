@@ -1,5 +1,5 @@
 <template>
-    <v-col class="users">
+    <v-col class="content">
         <v-card dark>
             <v-card-title dark>
                 <v-text-field
@@ -73,8 +73,10 @@
         data: function() {
             return {
                 items: [],
+
                 singleSelect: false,
                 selected: [],
+                
                 headers: [
                     {
                         text: 'User',
@@ -88,6 +90,7 @@
                     }
                 ],
                 apiUrl: process.env.VUE_APP_USERS_API_ENDPOINT,
+                
                 search: "",
                 total: 0,
                 page: 1,
@@ -95,33 +98,17 @@
                 options: {}
             }
         },
-        created() {
-            this.fetchData()
-        },
         methods: {
             async fetchData() {
                 let params = Object.assign({}, this.options, {'name': this.search});
                 let response = (await axiosInstance.get(this.apiUrl, {params: params})).data;
                 this.items = response.data;
 
-                let search = this.search.trim().toLowerCase();
-                console.log(search)
-                if (search) {
-                    this.items = this.items.filter(item => {
-                        return Object.values(item)
-                            .join(",")
-                            .toLowerCase()
-                            .includes(search);
-                    });
-                }
-
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
             },
             handlePageChange(value) {
-                console.log(this.page)
                 this.page = value;
-                // this.fetchData()
             },
             handleClick(selectedUser) {
                 this.selected = [selectedUser];
@@ -133,12 +120,9 @@
 </script>
 
 <style scoped>
-.users {
-    position: fixed;
-    width: 250px;
-    left: 200px;
-    top: 60px;
-    font-size: 12px;
-    /* background: #000; */
+.content {
+    position: relative;
+    width: 300px;
+    left: 10px;
 }
 </style>

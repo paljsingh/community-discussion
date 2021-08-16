@@ -5,7 +5,6 @@
 </template>
 
 <script>
-    // import Vue from 'vue';
     import VueChat from 'vue-advanced-chat'
     import 'vue-advanced-chat/dist/vue-advanced-chat.css'
     import io from "socket.io";
@@ -25,15 +24,13 @@
         watch: {
             async selected() {
                 let selectedUserId = this.selected[0]._id;
-                let room = await axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + "/new", {"user_ids": [selectedUserId]});
-                let users = []
-                console.log(room, room.data, room.data.users);
+                let response = (await axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + "/new", {"user_id": selectedUserId})).data;
 
-                room.data.users.forEach(function(user) {
-                    console.log("adding user_id");
-                    users.append(user._id);
+                let users = []
+                response.users.forEach(function(user) {
+                    users.push(user._id);
                 });
-                this.rooms = [{'roomId': room.data._id, 'roomName': room.data.name, 'users': users}];
+                this.rooms = [{'roomId': response._id, 'roomName': response.name, 'users': users}];
                 console.log(this.rooms);
                 // this.messages = 
                 // document.querySelector('vue-advanced-chat').rooms = this.rooms;

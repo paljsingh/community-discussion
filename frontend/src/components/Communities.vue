@@ -80,9 +80,6 @@
                 options: {}
             }
         },
-        // created() {
-        //     this.fetchData()
-        // },
         methods: {
             async fetchData () {
                 let params = Object.assign({}, this.options, {'name': this.search});
@@ -92,23 +89,6 @@
                 console.log(this.items)
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
-
-                // let search = this.search.trim().toLowerCase();
-                // if (search) {
-                //     this.items = this.items.filter(item => {
-                //         return Object.values(item)
-                //             .join(",")
-                //             .toLowerCase()
-                //             .includes(search);
-                //     });
-                // }
-
-                // let response = (await axios.get(this.apiUrl, {params: this.options})).data;
-                // this.items = response.data;
-                // this.page = response.pagination.page;
-                // this.total = response.pagination.total;
-                // this.size = (response.pagination.total-1) / response.pagination.page + 1;
-                // console.log(this.items, this.total, this.size)
             },
             handlePageChange(value) {
                 this.page = value;

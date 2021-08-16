@@ -27,7 +27,7 @@
 
       <div data-app>
         <div class="elem">
-          <v-text-field dark ref="jwt_token" label="Paste JWT Token" outlined clearable ></v-text-field>
+          <v-text-field dark v-model="jwt_token" label="Paste JWT Token" outlined clearable ></v-text-field>
           <v-btn v-on:click="login_dummy()">
             Impersonate a Dummy User
           </v-btn>
@@ -56,14 +56,18 @@ import { decodeToken } from "@okta/okta-auth-js";
 export default {
   name: 'home',
   mixins: [authHelper],
+  data: function() {
+    return {
+      jwt_token: "",
+    }
+  },
   methods: {
     async login () {
       await this.$auth.signInWithRedirect({ originalUri: '/profile' })
       localStorage.setItem('usertype', "okta");
     },
     login_dummy () {
-      let dummy_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiRWxpemFiZXRoIEJhbmtzIiwic3ViIjoiNzdlYjBiZTAtMDU5MC00ZmIwLWFhN2EtNjA4OWUyYmFkZmY1IiwiZW1haWwiOiJlbGl6YWJldGhfYmFua3NAbG9jYWxob3N0Iiwicm9sZSI6InVzZXIiLCJ2ZXIiOjEsImlzcyI6InB5dGhvbi9mbGFzayIsImlhdCI6MTYyODgzMzI0NC43ODU5MzUsImV4cCI6MTYyOTQzODA0NC43ODU5NDF9.shXLAM0M7iZ4a2fP9o4glZspslcwNHRyRLVN7DufQfQ'
-      let decoded = decodeToken(dummy_token);
+      let decoded = decodeToken(this.jwt_token);
       if (parseInt(Date.now()/1000) < parseInt(decoded.payload.exp)) {
           let claims = [
               {'claim': 'name', 'value': decoded.payload.name},
@@ -74,7 +78,7 @@ export default {
               {'claim': 'exp', 'value': decoded.payload.exp},
           ]
           // save the token.
-          localStorage.setItem('dummy-jwt-token', dummy_token);
+          localStorage.setItem('dummy-jwt-token', this.jwt_token);
           localStorage.setItem('claims', JSON.stringify(claims));
           localStorage.setItem('usertype', "dummy");
           this.force_update

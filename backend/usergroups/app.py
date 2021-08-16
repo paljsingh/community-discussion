@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from pymodm import MongoModel
 from pymodm.fields import CharField, DateTimeField, ListField
 from pymongo.write_concern import WriteConcern
@@ -6,7 +8,7 @@ import logging.config
 from datetime import datetime
 from random import Random
 
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, abort
 from faker import Faker
 from flask import request
 import uuid
@@ -15,7 +17,7 @@ from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
 from common.db import Db
 from common.utils import FlaskUtils
-from communities.app import Community
+from users.app import User
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
@@ -30,52 +32,59 @@ for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
 
 
-@app.route("/api/v1/communities/<community_id>/usergroups/new", methods=['POST'])
+@app.route("/api/v1/usergroups/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
-def create_usergroup(community_id, my_id, is_admin=False):
+def create_temp_usergroup(my_id, is_admin=False):
+    """
+    a temporary user group, not associated with a community.
+    This will be used for a user-user direct chat.
+    :param my_id:
+    :param is_admin:
+    :return:
+    """
     data = request.get_json()
-    new_usergroup = Usergroup(created_by=my_id)
-    new_usergroup.fake_info()
+    other_user_id = data.get('user_id')
 
-    # override with any data available in the post body.
-    if data and data.get('name'):
-        new_usergroup.name = data['name']
-    if data and data.get('tags'):
-        new_usergroup.tags = data['tags']
-    if data and data.get('users'):
-        new_usergroup.users = data['users']
+    if not other_user_id:
+        abort(HTTPStatus.PRECONDITION_FAILED)
 
-    new_usergroup.save()
-    return app.make_response(new_usergroup.to_son())
+    user_ids = [my_id, other_user_id]
+    # check is a usergroup exists already for these 2 users
+    usergroups = db.retrieve(
+        Usergroup, filters={'users': {'$all': user_ids}}, to_son=False, pagination=False
+    )
+    if not usergroups:
+        new_usergroup = Usergroup(created_by=my_id)
+        new_usergroup.fake_info()
+        # override with any data available in the post body.
+        if data and data.get('name'):
+            new_usergroup.name = data['name']
+        if data and data.get('tags'):
+            new_usergroup.tags = data['tags']
+        if user_ids:
+            new_usergroup.users = user_ids
+        new_usergroup.save()
+        usergroup = new_usergroup
+    else:
+        usergroup = usergroups[0]
+
+    users = db.retrieve(User, filters={'$id': {'$in': [user_ids]}}, pagination=False, to_son=False)
+    print(users)
+
+    usergroup.users = users
+    return app.make_response(usergroup.to_son())
 
 
-@app.route("/api/v1/communities/<community_id>/usergroups", methods=['GET'])
+@app.route("/api/v1/usergroups/mine", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def get_usergroups(community_id, my_id, is_admin=False):
+def get_my_usergroups(my_id, is_admin=False):
     """
     :param my_id:
-    :param community_id:
     :param is_admin: if admin, return all data for the user groups.
     for non-admins, return only the public data.
     :return:
     """
-
-    # find all usergroup ids in the community
-    community = db.get(Community, community_id, to_son=False)
-    usergroup_ids = community.usergroups
-
-    select_columns = ["name", "users"]
-    if is_admin:
-        select_columns = None
-
-    # not using auto_dereferencing, instead create a bulk query to fetch all usergroups together.
-
-    # collect usergroups for the above usergroup ids.
-    usergroups = db.retrieve(
-        Usergroup, filters={'id': {'$in': usergroup_ids}},
-        select_columns=select_columns)
-
-    return app.make_response(usergroups)
+    app.make_response(db.retrieve(Usergroup, filters={'users': {'$in': [my_id]}}))
 
 
 @app.route('/api/v1/usergroups/search', methods=['GET'])
@@ -112,7 +121,7 @@ class Usergroup(MongoModel):
     def fake_info(self):
         f = Faker()
         # give it a random 1 - 3 word name
-        self.name = ' '.join([str.title(f.words()) for i in range(Random().randint(1, 3))])
+        self.name = ' '.join([str.title(f.word()) for i in range(Random().randint(1, 3))])
         return self
 
     class Meta:

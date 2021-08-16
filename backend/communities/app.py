@@ -16,6 +16,7 @@ from flask import request
 
 from common.db import Db
 from common.utils import FlaskUtils
+from usergroups.app import Usergroup
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
@@ -165,6 +166,79 @@ def unsubscribe_to_community(community_id, my_id, is_admin=False):
     # add user to the community list
     community.remove_user(my_id)
     return app.make_response({})
+
+
+@app.route("/api/v1/communities/mine", methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_my_communities(my_id, is_admin=False):
+    """
+    :param my_id:
+    :param is_admin: if admin, return all data for the user groups.
+    for non-admins, return only the public data.
+    :return:
+    """
+    usergroups = db.retrieve(Usergroup, filters={'users': {'$in': [my_id]}}, to_son=False, pagination=False)
+    if not usergroups:
+        app.make_response({})
+
+    usergroup_ids = [x['id'] for x in usergroups]
+    app.make_response(db.retrieve(Community, filters={'usergroups': {'$in': usergroup_ids}}))
+
+
+@app.route("/api/v1/communities/<community_id>/usergroups/new", methods=['POST'])
+@CustomJWTVerifier.verify_jwt_token
+def create_usergroup(community_id, my_id, is_admin=False):
+    """
+    Create a usergroup under a community.
+    :param community_id:
+    :param my_id:
+    :param is_admin:
+    :return:
+    """
+    data = request.get_json()
+    new_usergroup = Usergroup(created_by=my_id)
+    new_usergroup.fake_info()
+
+    # override with any data available in the post body.
+    if data and data.get('name'):
+        new_usergroup.name = data['name']
+    if data and data.get('tags'):
+        new_usergroup.tags = data['tags']
+    if data and data.get('users'):
+        new_usergroup.users = data['users']
+
+    new_usergroup.save()
+    return app.make_response(new_usergroup.to_son())
+
+
+
+@app.route("/api/v1/communities/<community_id>/usergroups", methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_usergroups_for_community(community_id, my_id, is_admin=False):
+    """
+    :param my_id:
+    :param community_id:
+    :param is_admin: if admin, return all data for the user groups.
+    for non-admins, return only the public data.
+    :return:
+    """
+
+    # find all usergroup ids in the community
+    community = db.retrieve(Community, community_id, to_son=False, pagination=False)
+    usergroup_ids = community.usergroups
+
+    select_columns = ["name", "users"]
+    if is_admin:
+        select_columns = None
+
+    # not using auto_dereferencing, instead create a bulk query to fetch all usergroups together.
+
+    # collect usergroups for the above usergroup ids.
+    usergroups = db.retrieve(
+        Usergroup, filters={'id': {'$in': usergroup_ids}},
+        select_columns=select_columns)
+
+    return app.make_response(usergroups)
 
 
 # TODO

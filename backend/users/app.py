@@ -45,7 +45,6 @@ def create_dummy_user(my_id, is_admin=False):
 @app.route("/api/v1/users", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
 def get_all_users(my_id, is_admin=False):
-    print("------ called")
     if is_admin:
         select_columns = None
     else:
