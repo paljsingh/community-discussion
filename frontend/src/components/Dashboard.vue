@@ -34,12 +34,16 @@
 <script>
     import axiosInstance from '../helpers/interceptor.js';
     import authHelper from '../helpers/auth.js';
+    // import {VTextField, VSnackbar} from 'vuetify';
 
 
     export default {
         name: 'Dashboard',
         mixins: [authHelper],
-
+        // components: {
+        //     VTextField,
+        //     VSnackbar
+        // },
         data: function() {
             return {
                 users: [],
@@ -69,7 +73,7 @@
                     for (var i=0; i<this.num_users; i++) {
                         const response = await axiosInstance.post(process.env.VUE_APP_USERS_API_ENDPOINT + '/new');
                         console.info(response.data)
-                        this.new_users.push(response.data.users);
+                        this.new_users.push(response.data);
                     }
                     this.num_users = this.new_users.length;
                     this.snackbar_users = true
@@ -85,7 +89,7 @@
                     for (var i=0; i<this.num_usergroups; i++) {
                         const response = await axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + '/new')
                         console.log(response)
-                        this.new_usergroups.push(response.data.usergroups)
+                        this.new_usergroups.push(response.data)
                     }
                     this.num_usergroups = this.new_usergroups.length;
                     this.snackbar_usergroups = true
@@ -98,7 +102,7 @@
                 try {
                     for (var i=0; i<this.num_communities; i++) {
                         const response = await axiosInstance.post(process.env.VUE_APP_COMMUNITIES_API_ENDPOINT + '/new')
-                        this.new_communitiess.push(response.data.communities)
+                        this.new_communities.push(response.data)
                     }
                     this.num_communities = this.new_communities.length;
                     this.snackbar_communities = true

@@ -1,11 +1,10 @@
 <template>
-    <div class="communities">
+    <div class="content">
         <v-data-table
             :items="items"
             :headers="headers"
             :options.sync="options"
             :server-items-length="total"
-            hide-default-header
             class="elevation-1"
             loading
             loading-text="Loading... Please wait"
@@ -30,7 +29,7 @@
         watch: {
             options: {
                 handler() {
-                    this.get_communities();
+                    this.fetchData();
                 },
                 deep: true
             }
@@ -43,28 +42,29 @@
                         text: 'Community',
                         value: 'name',
                     },
+                    {
+                        text: 'Tags',
+                        value: 'tags',
+                    },
                 ],
                 apiUrl: process.env.VUE_APP_COMMUNITIES_API_ENDPOINT,
                 search: "",
                 options: {},
                 total: 0,
+                size: 0,
+                page: 0,
             }
         },
-        created() {
-            this.force_update;
-        },
         methods: {
-            async get_communities () {
-                try {
-                    const response = await axios.get(this.apiUrl)
-                    this.communities = response.data.communities
-                } catch (e) {
-                    console.error(e)
-                    this.failed = true
-                }
+            async fetchData () {
+                let response = (await axios.get(this.apiUrl, {params: this.options})).data;
+                this.items = response.data;
+                this.page = response.pagination.page;
+                this.total = response.pagination.total;
+                this.size = (response.pagination.total-1) / response.pagination.page + 1;
+                console.log(this.items, this.total, this.size)
             },
             handlePageChange(value) {
-                console.log(value)
                 this.page = value;
             },
 
@@ -74,12 +74,9 @@
 </script>
 
 <style scoped>
-.communities {
-    position: fixed;
-    width: 250px !important;
-    left: 200px !important;
-    top: 100px !important;
-    font-size: 12px;
-    /* background: #000; */
+.content {
+    position: relative;
+    width: 500px;
+    left: 10px;
 }
 </style>

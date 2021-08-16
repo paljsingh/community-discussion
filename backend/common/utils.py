@@ -12,9 +12,9 @@ class FlaskUtils:
             'type': int,
             'default': conf.get('default_per_page', 10)
         },
-        'currentPage': {
+        'page': {
             'type': int,
-            'default': 0
+            'default': 1
         },
         'name': {
             'type': str,
@@ -44,6 +44,8 @@ class FlaskUtils:
 
     @staticmethod
     def get_skip_limit():
-        per_page, current_page = FlaskUtils.get_url_args('perPage', 'currentPage')
+        per_page, current_page = FlaskUtils.get_url_args('perPage', 'page')
         per_page = min(per_page, FlaskUtils.conf.get('max_per_page'))
-        return per_page * current_page, per_page
+        skip = (current_page - 1) * per_page
+        limit = per_page
+        return skip, limit

@@ -84,6 +84,7 @@
                 search: "",
                 options: {},
                 total: 0,
+                page: 0,
             }
         },
         methods: {
@@ -91,7 +92,7 @@
                 let response = (await axiosInstance.get(this.apiUrl, {params: this.options})).data;
                 this.items = response.data;
                 this.total = response.pagination.total;
-                this.size = response.pagination.size;
+                this.size = (response.pagination.total-1) / response.pagination.page + 1;
             },
             handlePageChange(value) {
                 console.log(value)

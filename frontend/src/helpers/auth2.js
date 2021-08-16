@@ -3,7 +3,7 @@ function token() {
         return localStorage.getItem('dummy-jwt-token')
     }
     if (usertype() === "okta") {
-        return this.$auth.tokenManager.get("idToken")
+        return JSON.parse(localStorage.getItem("okta-token-storage"))['accessToken']['value']
     }
 }
 

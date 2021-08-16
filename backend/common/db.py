@@ -12,7 +12,7 @@ class Db:
 
     def retrieve(self, collection, filters: Dict = None, select_columns: List = None, to_son=True, pagination=True):    # noqa
         (skip, limit) = FlaskUtils.get_skip_limit()
-        (page, per_page) = FlaskUtils.get_url_args('currentPage', 'perPage')
+        (page, per_page) = FlaskUtils.get_url_args('page', 'perPage')
 
         query = collection.objects
         if select_columns:
@@ -29,7 +29,7 @@ class Db:
                 'data': items,
                 'pagination': {
                     'total': total_items,
-                    'currentPage': page,
+                    'page': page,
                     'perPage': per_page
                 }
             }

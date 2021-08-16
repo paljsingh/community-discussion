@@ -14,3 +14,10 @@ docker pull xemuliam/mongo:latest
 
 # setting up yarn packages
 cd frontend ; yarn install ; cd - 1>/dev/null
+
+# setting up directories
+mkdir data config
+for i in backend/{users,usergroups,communities,posts,chat} ; do
+  mkdir $i/logs
+  touch $i/logs/c18n.log
+done
