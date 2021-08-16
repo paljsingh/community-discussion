@@ -1,6 +1,8 @@
 <template>
     <div class='chatwindow'>
-        <VueChat :current-user-id="currentUserId" :rooms="rooms" :messages="messages" />
+        <VueChat current-user-id="currentUserId" rooms="rooms" messages="messages"
+        :loading-rooms="false" :rooms-loaded="true" :messages-loaded="true" 
+        :single-room="singleRoom" :load-first-room="true" :theme="dark"/>
     </div>
 </template>
 
@@ -22,21 +24,11 @@
         props: ['selected'],
         currentUserId: null,
         watch: {
-            async selected() {
-                let selectedUserId = this.selected[0]._id;
-                let response = (await axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + "/new", {"user_id": selectedUserId})).data;
-
-                let users = []
-                response.users.forEach(function(user) {
-                    users.push(user._id);
-                });
-                this.rooms = [{'roomId': response._id, 'roomName': response.name, 'users': users}];
-                console.log(this.rooms);
-                // this.messages = 
-                // document.querySelector('vue-advanced-chat').rooms = this.rooms;
-                // document.querySelector('vue-advanced-chat').messages = this.messages;
-                // document.querySelector('vue-advanced-chat').currentUserId = this.selected[0]._id;
-                // create and fetch a room for chat with target user.
+            selected: {
+                handler() {
+                    // this.fetchData()
+                },
+                deep: true
             }
         },
         components: {
@@ -44,45 +36,98 @@
         },
         data: function() {
             return {
-                rooms: [],
+                currentUserId: 1234,
+                singleRoom: false,
+                // rooms: [],
+                rooms:[
+                {
+                    roomId: 1,
+                    roomName: 'Room 1',
+                    avatar: 'assets/imgs/people.png',
+                    unreadCount: 0,
+                    index: 3,
+                    lastMessage: {
+                    content: 'Last message received',
+                    senderId: 1234,
+                    username: 'John Doe',
+                    timestamp: '10:20',
+                    saved: true,
+                    distributed: false,
+                    seen: false,
+                    new: true
+                    },
+                    users: [
+                    {
+                        _id: 1234,
+                        username: 'John Doe',
+                        avatar: 'assets/logo.png',
+                        status: {
+                        state: 'online',
+                        lastChanged: 'today, 14:30'
+                        }
+                    },
+                    {
+                        _id: 4321,
+                        username: 'John Snow',
+                        avatar: 'assets/logo.png',
+                        status: {
+                        state: 'online',
+                        lastChanged: '14 July, 20:00'
+                        }
+                    }
+                    ],
+                    typingUsers: [ 4321 ]
+                }
+                ],
                 claims: {'_id': 1},
-                currentUserId: 0,
-                messages: [],
-                    // {
-                    //     _id: 7890,
-                    //     content: 'message 1',
-                    //     senderId: 1234,
-                    //     username: 'John Doe',
-                    //     avatar: 'assets/imgs/doe.png',
-                    //     date: '13 November',
-                    //     timestamp: '10:20',
-                    //     system: false,
-                    //     saved: true,
-                    //     distributed: true,
-                    //     seen: true,
-                    //     deleted: false,
-                    //     disableActions: false,
-                    //     disableReactions: false,
-                        // file: {
+                // users: [],
+                users: [
+                    {
+                        _id: 1234,
+                        username: 'John Doe',
+                        avatar: 'assets/imgs/doe.png',
+                        status: {
+                        state: 'online',
+                        lastChanged: 'today, 14:30'
+                        }
+                    },
+                ],
+                messages: [
+                    {
+                        _id: 7890,
+                        content: 'message 1',
+                        senderId: 1234,
+                        username: 'John Doe',
+                        avatar: 'assets/logo.png',
+                        date: '13 November',
+                        timestamp: '10:20',
+                        system: false,
+                        saved: true,
+                        distributed: true,
+                        seen: true,
+                        deleted: false,
+                        disableActions: false,
+                        disableReactions: false,
+                        file: {},
                         //   name: 'My File',
                         //   size: 67351,
                         //   type: 'png',
                         //   audio: true,
                         //   duration: 14.4,
-                        //   url: 'https://firebasestorage.googleapis.com/...',
-                        //   preview: 'data:image/png;base64,iVBORw0KGgoAA...'
+                        // //   url: 'https://firebasestorage.googleapis.com/...',
+                        // //   preview: 'data:image/png;base64,iVBORw0KGgoAA...'
                         // },
-                //         reactions: {
-                //             wink: [
-                //                 1234, // USER_ID
-                //                 4321
-                //             ],
-                //             laughing: [
-                //                 1234
-                //             ]
-                //         }   // reaction 1
-                //     }   // message 1
-                // ],     // messages
+                        reactions: {
+                            wink: [
+                                1234, // USER_ID
+                                4321
+                            ],
+                            laughing: [
+                                1234
+                            ]
+                        }   // reaction 1
+                    }   // message 1
+                ],     // messages
             };  // return data
         },   // data
         // async mounted() {
@@ -90,6 +135,64 @@
         //     this.rooms = response.data.usergroups;
         // },
         methods: {
+            async fetchData() {
+                let selectedUserId = this.selected[0]._id;
+                let response = (await axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + "/new", {"user_id": selectedUserId})).data;
+
+                let user_id_map = {}
+                response.users.forEach((user) => {
+                    let u = {}
+                    u._id = user._id
+                    u.username = user.name
+                    u.status = {
+                        state: 'online'
+                    }
+                    this.users.push(u)
+                    user_id_map[user._id] = user.name
+                });
+                this.rooms = [{
+                    roomId: 1,
+                    roomName: this.selected[0].name,
+                    unreadCount: 0,
+                    index: 1,
+                    lastMessage: {},
+                    users: this.users,
+                    typingUsers: []
+                }];
+                let usergroup_id = response._id
+
+                // fetch historical messages
+                let messageApiUrl = process.env.VUE_APP_USERGROUPS_MESSAGES_API_ENDPOINT.replace('usergroup_id', usergroup_id)
+                response = (await axiosInstance.get(messageApiUrl)).data;
+                console.log("messages", response)
+                let count = 0
+                response.data.forEach((message) => {
+                    let m = {}
+                    m._id = count
+                    m.senderId = message.created_by
+                    m.content = message.content
+                    m.username = user_id_map[message.created_by]
+                    m.date = message.creation_date.substring(5, 15)     // TODO: parse date here
+                    m.timestamp = message.creation_date.substring(17, 22)     // TODO: parse date here
+                    m.file = {}
+                    m.reactions = {}
+                    this.messages.push(m);
+
+                    count += 1
+                });
+                console.log("messages", this.messages)
+
+            },
+            fetchMessages({ room, options }) {
+                console.log(room, options);
+                this.messagesLoaded = false
+
+                // use timeout to imitate async server fetched data
+                setTimeout(() => {
+                    this.messages = []
+                    this.messagesLoaded = true
+                })
+            },
             // handleClick() {
                 //  console.log("handle click", this.selectedUser)
                 // document.querySelector('vue-advanced-chat').currentUserId = this.claims._id;
@@ -143,7 +246,9 @@
     //     }
     // }
         mounted: function() {
-
+            document.querySelector('vue-advanced-chat').currentUserId = this.currentUserId
+            document.querySelector('vue-advanced-chat').rooms = this.rooms
+            document.querySelector('vue-advanced-chat').messages = this.messages
             let namespace = '/message';
             let socket = io(namespace, {transports: ['websocket'], upgrade: false});
 

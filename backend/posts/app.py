@@ -16,8 +16,6 @@ from common.customverifier import CustomJWTVerifier
 from werkzeug.exceptions import HTTPException, abort
 from flask import request
 
-from PIL import Image
-
 from common.db import Db
 from common.utils import FlaskUtils
 
@@ -47,9 +45,9 @@ def create_new_post(community_id, my_id, is_admin=False):
 
 @app.route("/api/v1/communities/<community_id>/images/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
-def create_new_image_post(my_id, is_admin=False):
+def create_new_image_post(community_id, my_id, is_admin=False):
     allowed_ext = ['png', 'jpg', 'jpeg', 'gif']
-    new_image_post = ImagePost(created_by=my_id)
+    new_image_post = ImagePost(created_by=my_id, community_id=community_id)
     file = request.files['file']
     ext = file.filename.split('.')[1] if file.filename else None
     if ext in allowed_ext:
@@ -62,9 +60,9 @@ def create_new_image_post(my_id, is_admin=False):
 
 @app.route("/api/v1/communities/<community_id>/videos/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
-def create_new_video_post(my_id, is_admin=False):
+def create_new_video_post(community_id, my_id, is_admin=False):
     allowed_ext = ['.mp4', '.mkv', '.mov']
-    new_video_post = VideoPost(created_by=my_id)
+    new_video_post = VideoPost(created_by=my_id, community_id=community_id)
     file = request.files['file']
     ext = file.filename.split('.')[1] if file.filename else None
 
@@ -138,16 +136,130 @@ def search_posts(community_id, my_id, is_admin=False):
     return app.make_response(posts)
 
 
+# Usergroup related messages
+
+
+@app.route("/api/v1/usergroups/<usergroup_id>/messages/new", methods=['POST'])
+@CustomJWTVerifier.verify_jwt_token
+def create_new_usergroup_post(usergroup_id, my_id, is_admin=False):
+
+    content = request.get_json()
+    new_post = Post(created_by=my_id, content=content, usergroup_id=usergroup_id)
+    new_post.save()
+    return app.make_response(new_post.to_son())
+
+
+@app.route("/api/v1/usergroups/<usergroup_id>/images/new", methods=['POST'])
+@CustomJWTVerifier.verify_jwt_token
+def create_new_usergroup_image_post(usergroup_id, my_id, is_admin=False):
+    allowed_ext = ['png', 'jpg', 'jpeg', 'gif']
+    new_image_post = ImagePost(created_by=my_id, usergroup_id=usergroup_id)
+    file = request.files['file']
+    ext = file.filename.split('.')[1] if file.filename else None
+    if ext in allowed_ext:
+        new_image_post.file = File(file)
+        new_image_post.save()
+        return app.make_response(new_image_post.to_son())
+    else:
+        abort(HTTPStatus.PRECONDITION_FAILED)
+
+
+@app.route("/api/v1/usergroups/<usergroup_id>/videos/new", methods=['POST'])
+@CustomJWTVerifier.verify_jwt_token
+def create_new_usergroup_video_post(usergroup_id, my_id, is_admin=False):
+    allowed_ext = ['.mp4', '.mkv', '.mov']
+    new_video_post = VideoPost(created_by=my_id, usergroup_id=usergroup_id)
+    file = request.files['file']
+    ext = file.filename.split('.')[1] if file.filename else None
+
+    if ext in allowed_ext:
+        new_video_post.file = File(file)
+        new_video_post.save()
+        return app.make_response(new_video_post.to_son())
+    else:
+        abort(HTTPStatus.PRECONDITION_FAILED)
+
+
+@app.route("/api/v1/usergroups/<usergroup_id>/messages", methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_all_usergroup_posts(usergroup_id, my_id, is_admin=False):
+    print("I am called")
+    posts = db.retrieve(Post, filters={'usergroup_id': usergroup_id})
+    print(posts)
+    return app.make_response(posts)
+
+
+@app.route("/api/v1/usergroups/<usergroup_id>/images", methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_all_usergroup_image_posts(usergroup_id, my_id, is_admin=False):
+    image_posts = db.retrieve(ImagePost, filters={'usergroup_id': usergroup_id})
+    return app.make_response(image_posts)
+
+
+@app.route("/api/v1/usergroups/<usergroup_id>/videos", methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_all_usergroup_video_posts(usergroup_id, my_id, is_admin=False):
+    video_posts = db.retrieve(VideoPost, filters={'usergroup_id': usergroup_id})
+    return app.make_response(video_posts)
+
+
+# TODO: Introduce private posts later.
+@app.route('/api/v1/usergroups/<usergroup_id>/messages/<message_id>', methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_usergroup_post(usergroup_id, message_id, my_id, is_admin=False):
+    print("I am called with message id")
+    post = db.get(Post, message_id)
+    return app.make_response(post.to_son())
+
+
+@app.route('/api/v1/usergroups/<usergroup_id>/images/<image_id>', methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_usergroup_image_post(usergroup_id, image_id, my_id, is_admin=False):
+    image_post = db.get(ImagePost, image_id)
+    return app.make_response(image_post.to_son())
+
+
+@app.route('/api/v1/usergroups/<usergroup_id>/videos/<video_id>', methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_usergroup_video_post(usergroup_id, video_id, my_id, is_admin=False):
+    video_post = db.get(ImagePost, video_id)
+    return app.make_response(video_post.to_son())
+
+
+@app.route('/api/v1/usergroups/<usergroup_id>/messages/search', methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def search_usergroup_posts(usergroup_id, my_id, is_admin=False):
+    text, = FlaskUtils.get_url_args('text')
+
+    # search for given name in indexed text-fields
+    posts = db.retrieve(Post, {
+        '$text': {
+            '$search': text,
+            '$caseSensitive': False,
+            '$diacriticSensitive': False,   # treat é, ê the same as e
+        }
+    })
+
+    # TODO: any history updates / events here.
+
+    return app.make_response(posts)
+
+
 # TODO
 # api to update community info.
 # api for invite status check.
 
 
 class Post(MongoModel):
+    """
+    For now, using Post object for both usergroup/user chat messages and the community posts.
+    A distinction may be made later.
+    """
     id = CharField(required=True, primary_key=True, default=uuid.uuid4)
     content = CharField(required=True)
     created_by = CharField(required=True)
     community_id = CharField(required=True)
+    usergroup_id = CharField(required=True)
     creation_date = DateTimeField(required=True, default=datetime.utcnow)
 
     def fake_info(self):

@@ -14,7 +14,7 @@ printf "%-40s" "stopping frontend node server ... " && \
   ps -ef | grep community-discussion/frontend/node_modules/.bin/vue-cli-service | grep -v grep | awk '{ print $2 }' | xargs kill -9 && \
   printf "$green%10.10s$default\n" "[ OK ]" || printf "$red%10.10s$default\n" "[ FAILED ]"
 
-for service in mongo zookeeper kafka; do
+for service in mongo kafka zookeeper; do
   printf "%-40s" "stopping $service service ... " && \
     docker stop $service && \
     printf "$green%10.10s$default\n" "[ OK ]" || printf "$red%10.10s$default\n" "[ FAILED ]"

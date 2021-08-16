@@ -42,6 +42,8 @@ def create_temp_usergroup(my_id, is_admin=False):
     :param is_admin:
     :return:
     """
+    print("post usergroups new")
+
     data = request.get_json()
     other_user_id = data.get('user_id')
 
@@ -53,7 +55,11 @@ def create_temp_usergroup(my_id, is_admin=False):
     usergroups = db.retrieve(
         Usergroup, filters={'users': {'$all': user_ids}}, to_son=False, pagination=False
     )
+    print("post usergroups ug")
+
     if not usergroups:
+        print("not ug")
+
         new_usergroup = Usergroup(created_by=my_id)
         new_usergroup.fake_info()
         # override with any data available in the post body.
@@ -66,10 +72,13 @@ def create_temp_usergroup(my_id, is_admin=False):
         new_usergroup.save()
         usergroup = new_usergroup
     else:
+        print("has users", user_ids)
         usergroup = usergroups[0]
+        print("has ", usergroup.to_son())
 
-    users = db.retrieve(User, filters={'$id': {'$in': [user_ids]}}, pagination=False, to_son=False)
-    print(users)
+    users = db.retrieve(User, filters={'_id': {'$in': user_ids}}, select_columns=['_id', 'name'],
+                        pagination=False, to_son=True)
+    print("post usergroups, users from db", users)
 
     usergroup.users = users
     return app.make_response(usergroup.to_son())
@@ -89,7 +98,7 @@ def get_my_usergroups(my_id, is_admin=False):
 
 @app.route("/api/v1/usergroups", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def get_communities(my_id, is_admin=False):
+def get_usergroups(my_id, is_admin=False):
     name, = FlaskUtils.get_url_args('name')
     # search for given str in indexed text-fields.
     filters = {}
@@ -116,6 +125,7 @@ class Usergroup(MongoModel):
     creation_date = DateTimeField(required=True, default=datetime.utcnow)
     created_by = CharField(required=True)
     tags = ListField(required=False, blank=True)
+    messages = ListField(required=False, blank=True)
 
     def fake_info(self):
         f = Faker()
