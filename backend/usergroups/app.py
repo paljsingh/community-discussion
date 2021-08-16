@@ -87,23 +87,22 @@ def get_my_usergroups(my_id, is_admin=False):
     app.make_response(db.retrieve(Usergroup, filters={'users': {'$in': [my_id]}}))
 
 
-@app.route('/api/v1/usergroups/search', methods=['GET'])
+@app.route("/api/v1/usergroups", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def search_usergroups(my_id, is_admin=False):
+def get_communities(my_id, is_admin=False):
     name, = FlaskUtils.get_url_args('name')
+    # search for given str in indexed text-fields.
+    filters = {}
+    if name:
+        filters = {
+            '$text': {
+                '$search': name,
+                '$caseSensitive': False,
+                '$diacriticSensitive': False,   # treat é, ê the same as e
+            }}
 
-    # search for given name in indexed text-fields
-    usergroups = db.retrieve(Usergroup, {
-        '$text': {
-            '$search': name,
-            '$caseSensitive': False,
-            '$diacriticSensitive': False,   # treat é, ê the same as e
-        }
-    })
+    return app.make_response(db.retrieve(Usergroup, filters=filters))
 
-    # TODO: any history updates / events here.
-
-    return app.make_response(usergroups)
 
 # TODO
 # api to fetch my user groups
