@@ -11,7 +11,7 @@ from datetime import datetime
 from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
 from werkzeug.exceptions import HTTPException, abort
-
+from flask import request
 from common.db import Db
 from common.utils import FlaskUtils
 
@@ -45,11 +45,28 @@ def create_dummy_user(my_id, is_admin=False):
 @app.route("/api/v1/users", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
 def get_all_users(my_id, is_admin=False):
+    print("------ called")
     if is_admin:
         select_columns = None
     else:
         select_columns = ["name"]
-    users = db.retrieve(User, select_columns=select_columns)
+
+    # The comma is not a typo.
+    # get_url_args returns a tuple, the syntax is needed to expand it inline when receiving a single argument.
+    name, = FlaskUtils.get_url_args('name')
+    name = name if len(name) >= app.conf.get('min_search_len', 3) else None
+
+    filters = {}
+    if name:
+        filters = {
+            '$text': {
+                '$search': name,
+                '$caseSensitive': False,
+                '$diacriticSensitive': False,   # treat é, ê the same as e
+            }
+        }
+
+    users = db.retrieve(User, filters=filters, select_columns=select_columns)
     return app.make_response(users)
 
 
@@ -62,30 +79,6 @@ def get_user(user_id, my_id, is_admin=False):
     else:
         return app.make_response(db.get(User, user_id, select_columns=['name']))
 
-
-@app.route('/api/v1/users/search', methods=['GET'])
-@CustomJWTVerifier.verify_jwt_token
-def search_users(my_id, is_admin=False):
-    select_columns = []
-    if not is_admin:
-        select_columns = ['_id', 'name']
-
-    # The comma is not a typo.
-    # get_url_args returns a tuple, the syntax is needed to expand it inline when receiving a single argument.
-    name, = FlaskUtils.get_url_args('name')
-
-    # search for given name in indexed text-fields
-    users = db.retrieve(User, {
-        '$text': {
-            '$search': name,
-            '$caseSensitive': False,
-            '$diacriticSensitive': False,   # treat é, ê the same as e
-        }
-    }, select_columns=select_columns)
-
-    # TODO: any history updates / events here.
-
-    return app.make_response(users)
 
 # TODO
 # Update a user api

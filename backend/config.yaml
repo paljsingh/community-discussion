@@ -16,3 +16,5 @@ zookeeper_endpoint: "localhost:2181"
 default_per_page: 10
 max_per_page: 100
 
+# search
+min_search_len: 3

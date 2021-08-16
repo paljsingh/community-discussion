@@ -20,6 +20,7 @@ class Db:
 
         if filters:
             query = query.raw(filters)
+            skip = 0
 
         items = [x.to_son() if to_son else x for x in query.skip(skip).limit(limit)]
         total_items = collection.objects.count()

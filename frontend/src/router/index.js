@@ -19,7 +19,7 @@ import ProfileComponent from '../components/Profile.vue'
 import UsersComponent from '../components/Users.vue'
 import UserGroupsComponent from '../components/UserGroups.vue'
 import CommunitiesComponent from '../components/Communities.vue'
-import DashboardComponent from '../components/Dashboard.vue'
+import AdminComponent from '../components/Admin.vue'
 
 import { OktaAuth } from '@okta/okta-auth-js'
 import OktaVue, { LoginCallback } from '@okta/okta-vue'
@@ -39,7 +39,7 @@ const router = new Router({
     UsersComponent,
     UserGroupsComponent,
     CommunitiesComponent,
-    DashboardComponent
+    AdminComponent
   },
   routes: [
     {
@@ -68,8 +68,8 @@ const router = new Router({
       meta: { 'isLoggedIn': true},
     },
     {
-      path: '/dashboard',
-      component: DashboardComponent,
+      path: '/admin',
+      component: AdminComponent,
       meta: { 'isLoggedIn': true, 'isOktaUser': true },
     },
     {

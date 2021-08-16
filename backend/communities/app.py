@@ -52,8 +52,26 @@ def create_new_community(my_id, is_admin=False):
 
 @app.route("/api/v1/communities", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
-def get_all_communities(my_id, is_admin=False):
-    return app.make_response(db.retrieve(Community))
+def get_communities(my_id, is_admin=False):
+    """
+    if name field is provided, return filtered results by matching name / tags, else
+    all the communities (paginated response)
+    :param my_id:
+    :param is_admin:
+    :return:
+    """
+    name, = FlaskUtils.get_url_args('name')
+    # search for given str in indexed text-fields.
+    filters = {}
+    if name:
+        filters = {
+            '$text': {
+                '$search': name,
+                '$caseSensitive': False,
+                '$diacriticSensitive': False,   # treat é, ê the same as e
+            }}
+
+    return app.make_response(db.retrieve(Community, filters=filters))
 
 
 @app.route('/api/v1/communities/<community_id>', methods=['GET'])
@@ -148,21 +166,6 @@ def unsubscribe_to_community(community_id, my_id, is_admin=False):
     community.remove_user(my_id)
     return app.make_response({})
 
-
-@app.route('/api/v1/communities/search', methods=['GET'])
-@CustomJWTVerifier.verify_jwt_token
-def search_community(my_id, is_admin=False):
-    name, = FlaskUtils.get_url_args('name')
-    # search for given str in indexed text-fields.
-    communities = db.retrieve(Community, {
-        '$text': {
-            '$search': name,
-            '$caseSensitive': False,
-            '$diacriticSensitive': False,   # treat é, ê the same as e
-        }})
-    # TODO: any history updates / events here.
-
-    return app.make_response(communities)
 
 # TODO
 # api to update community info.

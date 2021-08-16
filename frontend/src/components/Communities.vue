@@ -1,24 +1,41 @@
 <template>
-    <div class="content">
-        <v-data-table
-            :items="items"
-            :headers="headers"
-            :options.sync="options"
-            :server-items-length="total"
-            class="elevation-1"
-            loading
-            loading-text="Loading... Please wait"
-            dense
-            :search="search"
-            :footer-props="{
-                'items-per-page-text':'',
-                'items-per-page-options': []
-            }"
-            @update:pagination="handlePageChange"
-            dark
-        >
-        </v-data-table>
-    </div>
+    <v-col class="content">
+        <v-card dark>
+            <v-card-title dark>
+                <v-text-field
+                    v-model="search"
+                    append-icon="mdi-magnify"
+                    label="Search"
+                    single-line
+                    hide-details
+                    dark
+                ></v-text-field>
+            </v-card-title>
+            <v-data-table
+                :items="items"
+                :headers="headers"
+                :options.sync="options"
+
+                item-key="name"
+                v-model="selected"
+                @click:row="handleClick"
+                
+                :footer-props="{
+                    'items-per-page-text':'',
+                    'items-per-page-options': []
+                }"
+                @update:pagination="handlePageChange"
+                :server-items-length="total"
+
+                class="elevation-1"
+                loading
+                loading-text="Loading... Please wait"
+                dense
+                dark
+            >
+            </v-data-table>
+        </v-card>
+    </v-col>
 </template>
 
 <script>
@@ -32,11 +49,19 @@
                     this.fetchData();
                 },
                 deep: true
+            },
+            search: {
+                handler() {
+                    this.fetchData();
+                }
             }
         },
         data: function() {
             return {
                 items: [],
+                selected: [],
+                singleSelect: false,
+
                 headers: [
                     {
                         text: 'Community',
@@ -49,23 +74,47 @@
                 ],
                 apiUrl: process.env.VUE_APP_COMMUNITIES_API_ENDPOINT,
                 search: "",
-                options: {},
                 total: 0,
-                size: 0,
-                page: 0,
+                page: 1,
+                perPage: 10,
+                options: {}
             }
         },
+        // created() {
+        //     this.fetchData()
+        // },
         methods: {
             async fetchData () {
-                let response = (await axios.get(this.apiUrl, {params: this.options})).data;
+                let params = Object.assign({}, this.options, {'name': this.search});
+                let response = (await axios.get(this.apiUrl, {params: params})).data;
                 this.items = response.data;
-                this.page = response.pagination.page;
+
+                console.log(this.items)
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
-                console.log(this.items, this.total, this.size)
+
+                // let search = this.search.trim().toLowerCase();
+                // if (search) {
+                //     this.items = this.items.filter(item => {
+                //         return Object.values(item)
+                //             .join(",")
+                //             .toLowerCase()
+                //             .includes(search);
+                //     });
+                // }
+
+                // let response = (await axios.get(this.apiUrl, {params: this.options})).data;
+                // this.items = response.data;
+                // this.page = response.pagination.page;
+                // this.total = response.pagination.total;
+                // this.size = (response.pagination.total-1) / response.pagination.page + 1;
+                // console.log(this.items, this.total, this.size)
             },
             handlePageChange(value) {
                 this.page = value;
+            },
+            handleClick(selected) {
+                this.selected = [selected];
             },
 
         }

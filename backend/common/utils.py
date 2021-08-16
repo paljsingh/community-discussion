@@ -46,6 +46,7 @@ class FlaskUtils:
     def get_skip_limit():
         per_page, current_page = FlaskUtils.get_url_args('perPage', 'page')
         per_page = min(per_page, FlaskUtils.conf.get('max_per_page'))
+        print("perPage: {}, page: {}".format(per_page, current_page))
         skip = (current_page - 1) * per_page
         limit = per_page
         return skip, limit

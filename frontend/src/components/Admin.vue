@@ -1,5 +1,5 @@
 <template>
-    <div class="dashboard" v-if="this.usertype === 'okta'">
+    <div class="content" v-if="this.usertype === 'okta'">
         <h4>Create Dummy Users</h4>
         <v-text-field single-line clearable dark label="Create users" v-model="num_users" placeholder="5" />
         <button id="button-dummy-users" class="ui primary button" role="button" v-on:click="create_users()" >
@@ -34,16 +34,11 @@
 <script>
     import axiosInstance from '../helpers/interceptor.js';
     import authHelper from '../helpers/auth.js';
-    // import {VTextField, VSnackbar} from 'vuetify';
 
 
     export default {
         name: 'Dashboard',
         mixins: [authHelper],
-        // components: {
-        //     VTextField,
-        //     VSnackbar
-        // },
         data: function() {
             return {
                 users: [],
@@ -78,7 +73,6 @@
                     this.num_users = this.new_users.length;
                     this.snackbar_users = true
 
-                    // this.$router.push('/users')
                 } catch (e) {
                     console.error(e)
                     this.failed = true
@@ -123,7 +117,6 @@
     left: 250px;
     top: 60px;
     font-size: 12px;
-    /* background: #000; */
 }
 
 </style>

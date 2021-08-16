@@ -14,19 +14,21 @@
             <v-data-table
                 :items="items"
                 :headers="headers"
-                :search="search"
                 :options.sync="options"
-                :server-items-length="total"
+
                 :single-select="singleSelect"
                 item-key="name"
                 v-model="selected"
+
                 class="elevation-1"
                 :footer-props="{
                     'items-per-page-text':'',
                     'items-per-page-options': []
                 }"
+                :server-items-length="total"
                 @update:pagination="handlePageChange"
                 @click:row="handleClick"
+
                 loading-text="Loading... Please wait"
                 loading: true
                 hide-default-header
@@ -62,6 +64,11 @@
                 },
                 deep: true
             },
+            search: {
+                handler() {
+                    this.fetchData();
+                }
+            }
         },
         data: function() {
             return {
@@ -82,21 +89,39 @@
                 ],
                 apiUrl: process.env.VUE_APP_USERS_API_ENDPOINT,
                 search: "",
-                options: {},
                 total: 0,
-                page: 0,
+                page: 1,
+                perPage: 10,
+                options: {}
             }
+        },
+        created() {
+            this.fetchData()
         },
         methods: {
             async fetchData() {
-                let response = (await axiosInstance.get(this.apiUrl, {params: this.options})).data;
+                let params = Object.assign({}, this.options, {'name': this.search});
+                let response = (await axiosInstance.get(this.apiUrl, {params: params})).data;
                 this.items = response.data;
+
+                let search = this.search.trim().toLowerCase();
+                console.log(search)
+                if (search) {
+                    this.items = this.items.filter(item => {
+                        return Object.values(item)
+                            .join(",")
+                            .toLowerCase()
+                            .includes(search);
+                    });
+                }
+
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
             },
             handlePageChange(value) {
-                console.log(value)
+                console.log(this.page)
                 this.page = value;
+                // this.fetchData()
             },
             handleClick(selectedUser) {
                 this.selected = [selectedUser];
