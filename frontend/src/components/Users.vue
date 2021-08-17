@@ -8,6 +8,7 @@
                     label="Search"
                     single-line
                     hide-details
+                    v-on:change="this.fetchData"
                     dark
                 ></v-text-field>
             </v-card-title>
@@ -64,11 +65,6 @@
                 },
                 deep: true
             },
-            search: {
-                handler() {
-                    this.fetchData();
-                }
-            }
         },
         data: function() {
             return {
