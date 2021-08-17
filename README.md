@@ -64,7 +64,6 @@ recently generaed content.
 Graph db
 
 For user interaction workflows, user connections it may be worth to introduce a graph db.
-posts / messages are push
 
 The analytics module makes use of the indexed views provided by elastic search.
 A python/flask server exposes api for analytics queries, which is presented in the browser via Vue components.
