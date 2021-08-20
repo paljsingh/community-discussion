@@ -9,7 +9,9 @@ algo: "HS256"
 secret_key: "AQuickBrownFoxJumpsOverTheLazyDog"
 token_expiry_in_days: 7
 
-kafka_endpoint: "localhost:9092"
+kafka_endpoints:
+  - "localhost:9092"
+
 zookeeper_endpoint: "localhost:2181"
 
 # pagination results
