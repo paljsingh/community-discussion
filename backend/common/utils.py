@@ -49,3 +49,8 @@ class FlaskUtils:
         skip = (current_page - 1) * per_page
         limit = per_page
         return skip, limit
+
+    @staticmethod
+    def graceful_shutdown(db, kafka_producer):
+        db.disconnect()
+        kafka_producer.close()
