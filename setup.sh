@@ -22,7 +22,7 @@ docker pull docker.elastic.co/elasticsearch/elasticsearch:7.14.0
 cd frontend ; yarn install ; cd - 1>/dev/null
 
 # setting up directories
-mkdir -p mounted/data/{mongo,kafka,spark,images,videos} mounted/config/{mongo,kafka,spark}
+mkdir -p var/data/{mongo,kafka,spark,images,videos} var/config/{mongo,kafka,spark}
 for i in backend/{users,usergroups,communities,posts,chat} ; do
   mkdir $i/logs
   touch $i/logs/c18n.log

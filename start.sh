@@ -38,8 +38,8 @@ run_mongo() {
     docker run --name mongo --rm -d \
       --network $network \
       -p 27017:27017 -p 28017:28017 \
-      -v $PWD/mounted/data/mongo:/data/db \
-      -v $PWD/mounted/config/mongo:/data/configdb \
+      -v $PWD/var/data/mongo:/data/db \
+      -v $PWD/var/config/mongo:/data/configdb \
       xemuliam/mongo
   fi
 
