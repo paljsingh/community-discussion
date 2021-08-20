@@ -1,0 +1,19 @@
+stream:
+  num_threads: 2
+  batch_interval: 1
+  source_host: "localhost"
+  source_port: 9092
+  source_type: 'kafka'
+  sink_host: "localhost"
+  source_port: 9093
+  source_type: 'elasticsearch'
+
+batch:
+  num_threads: 2
+  batch_interval: 30
+  source_host: "localhost"
+  source_port: 27087
+  source_type: 'mongo'
+  sink_host: "localhost"
+  source_port: 9093
+  source_type: 'elasticsearch'
