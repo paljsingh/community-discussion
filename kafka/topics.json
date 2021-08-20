@@ -20,6 +20,11 @@
     "replication_factor": 1
   },
   {
+    "name": "invites",
+    "num_partitions": 3,
+    "replication_factor": 1
+  },
+  {
     "name": "shares",
     "num_partitions": 3,
     "replication_factor": 1
