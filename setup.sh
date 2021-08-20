@@ -12,6 +12,12 @@ docker pull bitnami/kafka:latest
 # pull mongodb (image with gridfs support)
 docker pull xemuliam/mongo:latest
 
+# pull apache spark image
+docker pull bitnami/spark:latest
+
+# pull elastic search image
+docker pull docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+
 # setting up yarn packages
 cd frontend ; yarn install ; cd - 1>/dev/null
 

@@ -59,7 +59,9 @@ def create_new_community(my_id, is_admin=False):
 
     # push a new community event
     producer.send('communities', {'id': new_community.id, 'name': new_community.name, 'tags': new_community.tags,
-                                  'user_id': my_id, 'creation_date': new_community.creation_date})
+                                  'user_id': my_id, 'creation_date': new_community.creation_date,
+                                  'action': 'new community'
+                                  })
 
     return app.make_response(new_community.to_son())
 
@@ -114,7 +116,8 @@ def invite_user_to_community(community_id, user_id, my_id, is_admin=False):
     # push a new community event
     producer.send('invites', {'id': invite_id, 'community_id': community_id,
                               'invite_by_user_id': my_id, 'invite_to_user_id': user_id,
-                              'creation_date': community.creation_date, 'action': 'invite'})
+                              'creation_date': community.creation_date,
+                              'action': 'invite'})
 
     return resp
 
@@ -142,7 +145,8 @@ def accept_invite_to_community(community_id, invite_id, my_id, is_admin=False):
 
         # push a new community event
         producer.send('invites', {'id': invite_id, 'community_id': community_id,
-                                  'user_id': my_id, 'creation_date': invite.creation_date, 'action': 'accept'})
+                                  'user_id': my_id, 'creation_date': invite.creation_date,
+                                  'action': 'accept'})
 
         resp = app.make_response(community.to_son())
         resp.headers['Location'] = '/api/v1/communities/{}'.format(community_id)

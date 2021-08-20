@@ -53,6 +53,22 @@ run_mongo() {
 
 }
 
+run_spark() {
+  echo "starting spark cluster"
+  if ! docker ps -a | grep spark; then
+    docker run --rm -d --name spark-master \
+      --network=$network \
+      -e SPARK_MODE=master \
+      bitnami/spark
+
+    docker run --rm -d --name spark-worker \
+      --network=$network \
+      -e SPARK_MASTER_URL=spark://spark-master:7077 \
+      -e SPARK_MODE=worker \
+      bitnami/spark
+  fi
+}
+
 declare -a components=("users" "communities" "usergroups" "posts")
 run_backend() {
 
@@ -95,7 +111,7 @@ tail_logs() {
 
 source $PWD/venv/bin/activate
 
-if [ $# -eq 1 -a $1 = '-h' ]; then
+if [ $# -eq 1 -a "$1" = '-h' ]; then
   cat <<EOF
 usage
 $0
@@ -107,6 +123,7 @@ $0 component [component] ...
   components can be one of:
   mongo
   kafka
+  spark
   backend
   frontend
 EOF
@@ -116,6 +133,7 @@ fi
 case $# in
   0)
     run_kafka
+    run_spark
     run_mongo
     run_backend
     run_frontend

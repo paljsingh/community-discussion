@@ -49,7 +49,9 @@ def create_new_post(community_id, my_id, is_admin=False):
 
     # notify kafka about new post
     producer.send('communities', {'id': new_post.id, 'content': new_post.content, 'community_id': community_id,
-                                  'user_id': my_id, 'creation_date': new_post.creation_date})
+                                  'user_id': my_id, 'creation_date': new_post.creation_date,
+                                  'action': 'new post'
+                                  })
     return app.make_response(new_post.to_son())
 
 
@@ -65,7 +67,9 @@ def create_new_image_post(community_id, my_id, is_admin=False):
         new_image_post.save()
 
         producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'community_id': community_id,
-                                 'user_id': my_id, 'creation_date': new_image_post.creation_date})
+                                 'user_id': my_id, 'creation_date': new_image_post.creation_date,
+                                 'action': 'new image'
+                                 })
 
         return app.make_response(new_image_post.to_son())
     else:
@@ -85,7 +89,9 @@ def create_new_video_post(community_id, my_id, is_admin=False):
         new_video_post.save()
 
         producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'community_id': community_id,
-                                 'user_id': my_id, 'creation_date': new_video_post.creation_date})
+                                 'user_id': my_id, 'creation_date': new_video_post.creation_date,
+                                 'action': 'new video'
+                                 })
 
         return app.make_response(new_video_post.to_son())
     else:
@@ -166,7 +172,9 @@ def create_new_usergroup_post(usergroup_id, my_id, is_admin=False):
     new_post.save()
 
     producer.send('posts', {'id': new_post.id, 'name': new_post.name, 'usergroup_id': usergroup_id,
-                            'user_id': my_id, 'creation_date': new_post.creation_date})
+                            'user_id': my_id, 'creation_date': new_post.creation_date,
+                            'action': 'new message'
+                            })
 
     return app.make_response(new_post.to_son())
 
@@ -183,7 +191,9 @@ def create_new_usergroup_image_post(usergroup_id, my_id, is_admin=False):
         new_image_post.save()
 
         producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'usergroup_id': usergroup_id,
-                                 'user_id': my_id, 'creation_date': new_image_post.creation_date})
+                                 'user_id': my_id, 'creation_date': new_image_post.creation_date,
+                                 'action': 'new image'
+                                 })
 
         return app.make_response(new_image_post.to_son())
     else:
@@ -203,7 +213,9 @@ def create_new_usergroup_video_post(usergroup_id, my_id, is_admin=False):
         new_video_post.save()
 
         producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'usergroup_id': usergroup_id,
-                                 'user_id': my_id, 'creation_date': new_video_post.creation_date})
+                                 'user_id': my_id, 'creation_date': new_video_post.creation_date,
+                                 'action': 'new video'
+                                 })
 
         return app.make_response(new_video_post.to_son())
     else:
@@ -302,13 +314,6 @@ class Post(MongoModel):
 
 class ImagePost(Post):
     file = ImageField(required=True)
-
-    # TODO: move the fake image generation to an external tool.
-    # def fake_info(self):
-    #     r = Random()
-    #     f = Faker()
-    #     self.file = Image.new('RGB', (100, 100), color=(r.randint(1, 255), r.randint(1, 255), r.randint(1, 255)))
-    #     self.file.save('{}.png'.format(f.word()))
 
     class Meta:
         write_concern = WriteConcern(j=True)
