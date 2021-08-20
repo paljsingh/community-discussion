@@ -13,15 +13,15 @@ class PostCreator:
 
     def create(self):
         f = Faker()
-        name = ' '.join('{} {}'.format(f.word(), f.word()))
-        content = ' '.join([f.sentence() for i in range(random.randint(5, 20))])
+        content = ' '.join([f.sentence() for i in range(random.randint(2, 10))])
 
-        resp = requests.post('{}/new'.format(self.url), {'name': name, 'content': content},
+        resp = requests.post('{}/new'.format(self.url), json={'content': content},
                              headers={'Authorization': 'Bearer {}'.format(self.token)})
 
         if resp.status_code == 200:
             data = resp.json()
-            print(data['_id'], data['name'])
+            print(data['_id'], data['content'])
+            return data
         else:
             print("ERROR - {}".format(resp.content))
 

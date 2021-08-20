@@ -1,26 +1,30 @@
 import os
 import random
 import sys
+from typing import List
+
 import requests
 from faker import Faker
 
 
 class UserGroupCreator:
 
-    def __init__(self, url, token):
+    def __init__(self, url, token, users: List):
         self.url = url
         self.token = token
+        self.users = users
 
     def create(self):
         f = Faker()
         name = '{} {}'.format(f.word(), f.word())
         tags = ','.join([f.word() for i in range(random.randint(1, 5))])
-        resp = requests.post('{}/new'.format(self.url), {'name': name, 'tags': tags},
+        resp = requests.post('{}/new'.format(self.url), json={'name': name, 'tags': tags, 'users': self.users},
                              headers={'Authorization': 'Bearer {}'.format(self.token)})
 
         if resp.status_code == 200:
             data = resp.json()
             print(data['_id'], data['name'], data['tags'])
+            return data
         else:
             print("ERROR - {}".format(resp.content))
 

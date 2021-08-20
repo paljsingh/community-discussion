@@ -23,12 +23,13 @@ class VideoPostCreator:
 
         tags = ','.join([f.word() for i in range(random.randint(1, 5))])
         with open(name, 'rb') as fh:
-            resp = requests.post('{}/new'.format(self.url), data={'name': name, 'tags': tags}, files={'content': fh},
+            resp = requests.post('{}/new'.format(self.url), json={'name': name, 'tags': tags}, files={'content': fh},
                                  headers={'Authorization': 'Bearer {}'.format(self.token)})
 
             if resp.status_code == 200:
                 data = resp.json()
                 print(data['_id'], data['name'], data['tags'])
+                return data
             else:
                 print("ERROR - {}".format(resp.content))
 
@@ -44,4 +45,3 @@ if __name__ == '__main__':
         sys.exit(1)
 
     VideoPostCreator(os.environ.get('POSTS_API_ENDPOINT'), os.environ.get('TOKEN')).create()
-

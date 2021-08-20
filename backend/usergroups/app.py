@@ -79,7 +79,7 @@ def create_temp_usergroup(my_id, is_admin=False):
 
         # push a new usergroup event
         producer.send('usergroups', {'id': usergroup.id, 'name': usergroup.name, 'tags': usergroup.tags,
-                                     'user_id': my_id, 'creation_date': usergroup.creation_date,
+                                     'user_id': my_id, 'creation_date': usergroup.creation_date.isoformat(),
                                      'action': 'new usergroup'
                                      })
     else:

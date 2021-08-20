@@ -16,6 +16,7 @@ class UserCreator:
         if resp.status_code == 200:
             data = resp.json()
             print(data['_id'], data['name'])
+            return data
         else:
             print("ERROR - {}".format(resp.content))
 

@@ -1,9 +1,11 @@
 import json
+import os
 from functools import partial
 from http import HTTPStatus
+from typing import Dict
 
 from pymodm import MongoModel
-from pymodm.files import File
+from pymodm.files import File, Storage
 from pymodm.fields import CharField, DateTimeField, ImageField, FileField
 from pymongo.write_concern import WriteConcern
 
@@ -44,12 +46,12 @@ for cls in HTTPException.__subclasses__():
 def create_new_post(community_id, my_id, is_admin=False):
 
     content = request.get_json()
-    new_post = Post(created_by=my_id, content=content, community_id=community_id)
+    new_post = TextPost(created_by=my_id, content=content, community_id=community_id)
     new_post.save()
 
     # notify kafka about new post
     producer.send('communities', {'id': new_post.id, 'content': new_post.content, 'community_id': community_id,
-                                  'user_id': my_id, 'creation_date': new_post.creation_date,
+                                  'user_id': my_id, 'creation_date': new_post.creation_date.isoformat(),
                                   'action': 'new post'
                                   })
     return app.make_response(new_post.to_son())
@@ -60,14 +62,14 @@ def create_new_post(community_id, my_id, is_admin=False):
 def create_new_image_post(community_id, my_id, is_admin=False):
     allowed_ext = ['png', 'jpg', 'jpeg', 'gif']
     new_image_post = ImagePost(created_by=my_id, community_id=community_id)
-    file = request.files['file']
+    file = request.files['content']
     ext = file.filename.split('.')[1] if file.filename else None
     if ext in allowed_ext:
         new_image_post.file = File(file)
         new_image_post.save()
 
         producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'community_id': community_id,
-                                 'user_id': my_id, 'creation_date': new_image_post.creation_date,
+                                 'user_id': my_id, 'creation_date': new_image_post.creation_date.isoformat(),
                                  'action': 'new image'
                                  })
 
@@ -81,7 +83,7 @@ def create_new_image_post(community_id, my_id, is_admin=False):
 def create_new_video_post(community_id, my_id, is_admin=False):
     allowed_ext = ['.mp4', '.mkv', '.mov']
     new_video_post = VideoPost(created_by=my_id, community_id=community_id)
-    file = request.files['file']
+    file = request.files['content']
     ext = file.filename.split('.')[1] if file.filename else None
 
     if ext in allowed_ext:
@@ -89,7 +91,7 @@ def create_new_video_post(community_id, my_id, is_admin=False):
         new_video_post.save()
 
         producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'community_id': community_id,
-                                 'user_id': my_id, 'creation_date': new_video_post.creation_date,
+                                 'user_id': my_id, 'creation_date': new_video_post.creation_date.isoformat(),
                                  'action': 'new video'
                                  })
 
@@ -101,7 +103,7 @@ def create_new_video_post(community_id, my_id, is_admin=False):
 @app.route("/api/v1/communities/<community_id>/posts", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
 def get_all_posts(community_id, my_id, is_admin=False):
-    posts = db.retrieve(Post, filters={'community_id': community_id})
+    posts = db.retrieve(TextPost, filters={'community_id': community_id})
     return app.make_response(posts)
 
 
@@ -123,7 +125,7 @@ def get_all_video_posts(community_id, my_id, is_admin=False):
 @app.route('/api/v1/communities/<community_id>/posts/<post_id>', methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
 def get_post(community_id, post_id, my_id, is_admin=False):
-    post = db.get(Post, post_id)
+    post = db.get(TextPost, post_id)
     return app.make_response(post.to_son())
 
 
@@ -147,7 +149,7 @@ def search_posts(community_id, my_id, is_admin=False):
     text, = FlaskUtils.get_url_args('text')
 
     # search for given name in indexed text-fields
-    posts = db.retrieve(Post, {
+    posts = db.retrieve(TextPost, {
         '$text': {
             '$search': text,
             '$caseSensitive': False,
@@ -168,11 +170,11 @@ def search_posts(community_id, my_id, is_admin=False):
 def create_new_usergroup_post(usergroup_id, my_id, is_admin=False):
 
     content = request.get_json()
-    new_post = Post(created_by=my_id, content=content, usergroup_id=usergroup_id)
+    new_post = TextPost(created_by=my_id, content=content, usergroup_id=usergroup_id)
     new_post.save()
 
     producer.send('posts', {'id': new_post.id, 'name': new_post.name, 'usergroup_id': usergroup_id,
-                            'user_id': my_id, 'creation_date': new_post.creation_date,
+                            'user_id': my_id, 'creation_date': new_post.creation_date.isoformat(),
                             'action': 'new message'
                             })
 
@@ -183,7 +185,12 @@ def create_new_usergroup_post(usergroup_id, my_id, is_admin=False):
 @CustomJWTVerifier.verify_jwt_token
 def create_new_usergroup_image_post(usergroup_id, my_id, is_admin=False):
     allowed_ext = ['png', 'jpg', 'jpeg', 'gif']
+    data = request.get_json()
+
     new_image_post = ImagePost(created_by=my_id, usergroup_id=usergroup_id)
+    if data.get('name'):
+        new_image_post.name = data['name']
+
     file = request.files['file']
     ext = file.filename.split('.')[1] if file.filename else None
     if ext in allowed_ext:
@@ -191,7 +198,7 @@ def create_new_usergroup_image_post(usergroup_id, my_id, is_admin=False):
         new_image_post.save()
 
         producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'usergroup_id': usergroup_id,
-                                 'user_id': my_id, 'creation_date': new_image_post.creation_date,
+                                 'user_id': my_id, 'creation_date': new_image_post.creation_date.isoformat(),
                                  'action': 'new image'
                                  })
 
@@ -204,7 +211,13 @@ def create_new_usergroup_image_post(usergroup_id, my_id, is_admin=False):
 @CustomJWTVerifier.verify_jwt_token
 def create_new_usergroup_video_post(usergroup_id, my_id, is_admin=False):
     allowed_ext = ['.mp4', '.mkv', '.mov']
+    data = request.get_json()
+
     new_video_post = VideoPost(created_by=my_id, usergroup_id=usergroup_id)
+
+    if data.get('name'):
+        new_video_post.name = data['name']
+
     file = request.files['file']
     ext = file.filename.split('.')[1] if file.filename else None
 
@@ -213,7 +226,7 @@ def create_new_usergroup_video_post(usergroup_id, my_id, is_admin=False):
         new_video_post.save()
 
         producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'usergroup_id': usergroup_id,
-                                 'user_id': my_id, 'creation_date': new_video_post.creation_date,
+                                 'user_id': my_id, 'creation_date': new_video_post.creation_date.isoformat(),
                                  'action': 'new video'
                                  })
 
@@ -225,9 +238,7 @@ def create_new_usergroup_video_post(usergroup_id, my_id, is_admin=False):
 @app.route("/api/v1/usergroups/<usergroup_id>/messages", methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
 def get_all_usergroup_posts(usergroup_id, my_id, is_admin=False):
-    print("I am called")
-    posts = db.retrieve(Post, filters={'usergroup_id': usergroup_id})
-    print(posts)
+    posts = db.retrieve(TextPost, filters={'usergroup_id': usergroup_id})
     return app.make_response(posts)
 
 
@@ -249,8 +260,7 @@ def get_all_usergroup_video_posts(usergroup_id, my_id, is_admin=False):
 @app.route('/api/v1/usergroups/<usergroup_id>/messages/<message_id>', methods=['GET'])
 @CustomJWTVerifier.verify_jwt_token
 def get_usergroup_post(usergroup_id, message_id, my_id, is_admin=False):
-    print("I am called with message id")
-    post = db.get(Post, message_id)
+    post = db.get(TextPost, message_id)
     return app.make_response(post.to_son())
 
 
@@ -274,7 +284,7 @@ def search_usergroup_posts(usergroup_id, my_id, is_admin=False):
     text, = FlaskUtils.get_url_args('text')
 
     # search for given name in indexed text-fields
-    posts = db.retrieve(Post, {
+    posts = db.retrieve(TextPost, {
         '$text': {
             '$search': text,
             '$caseSensitive': False,
@@ -291,6 +301,42 @@ def search_usergroup_posts(usergroup_id, my_id, is_admin=False):
 # api to update community info.
 # api for invite status check.
 
+class GridFsStore(Storage):
+
+    def __init__(self, upload_to):
+        self.upload_to = upload_to
+
+    def _path(self, name):
+        _, name = os.path.split(name)
+        return os.path.join(self.upload_to, name)
+
+    def open(self, name, mode='rb'):
+        return File(open(self._path(name), mode))
+
+    def save(self, name, content, metadata=None):
+        if not os.path.exists(self.upload_to):
+            os.makedirs(self.upload_to)
+
+        dest = None
+        try:
+            for chunk in content.chunks():
+                if dest is None:
+                    mode = 'wb' if isinstance(chunk, bytes) else 'wt'
+                    dest = open(name, mode)
+                dest.write(chunk)
+            # Create an empty file.
+            if dest is None:
+                dest = open(name, 'wb')
+        finally:
+            dest.close()
+        return name
+
+    def delete(self, name):
+        os.remove(self._path(name))
+
+    def exists(self, name):
+        return os.path.exists(self._path(name))
+
 
 class Post(MongoModel):
     """
@@ -298,11 +344,19 @@ class Post(MongoModel):
     A distinction may be made later.
     """
     id = CharField(required=True, primary_key=True, default=uuid.uuid4)
-    content = CharField(required=True)
     created_by = CharField(required=True)
     community_id = CharField(required=True)
-    usergroup_id = CharField(required=True)
+    usergroup_id = CharField(required=False)
     creation_date = DateTimeField(required=True, default=datetime.utcnow)
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'my-app'
+
+
+class TextPost(Post):
+    content = CharField(required=True)
+    name = CharField(required=False)
 
     def fake_info(self):
         self.content = Faker().paragraph(nb_sentences=Random().randint(20, 50))
@@ -313,7 +367,8 @@ class Post(MongoModel):
 
 
 class ImagePost(Post):
-    file = ImageField(required=True)
+    file = ImageField(required=True, storage=GridFsStore('images'))
+    name = CharField(required=False, blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
@@ -321,7 +376,8 @@ class ImagePost(Post):
 
 
 class VideoPost(Post):
-    file = FileField(required=True)
+    file = FileField(required=True, storage=GridFsStore('videos'))
+    name = CharField(required=False, blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)

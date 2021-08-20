@@ -15,12 +15,13 @@ class CommunityCreator:
         f = Faker()
         name = '{} {}'.format(f.word(), f.word())
         tags = ','.join([f.word() for i in range(random.randint(1, 5))])
-        resp = requests.post('{}/new'.format(self.url), {'name': name, 'tags': tags},
+        resp = requests.post('{}/new'.format(self.url), json={'name': name, 'tags': tags},
                              headers={'Authorization': 'Bearer {}'.format(self.token)})
 
         if resp.status_code == 200:
             data = resp.json()
             print(data['_id'], data['name'], data['tags'])
+            return data
         else:
             print("ERROR - {}".format(resp.content))
 

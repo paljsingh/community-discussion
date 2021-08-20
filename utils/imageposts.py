@@ -14,19 +14,20 @@ class ImagePostCreator:
 
     def create(self):
         f = Faker()
-        name = ' '.join('{} {}'.format(f.word(), f.word()))
+        name = '{}.png'.format(f.word())
 
         # generate a random single color image of size 100x100
         file = Image.new('RGB', (100, 100), color=(random.randint(1, 255), random.randint(1, 255), random.randint(1, 255)))
-        file.save('{}.png'.format(f.word()))
+        file.save(name)
 
         with open(name, 'rb') as fh:
-            resp = requests.post('{}/new'.format(self.url), files={'content': file}, data={'name': fh},
+            resp = requests.post('{}/new'.format(self.url), files={'content': fh}, json={'name': name},
                                  headers={'Authorization': 'Bearer {}'.format(self.token)})
 
             if resp.status_code == 200:
                 data = resp.json()
                 print(data['_id'], data['name'])
+                return data
             else:
                 print("ERROR - {}".format(resp.content))
 
