@@ -1,5 +1,5 @@
 import argparse
-import os.path
+import os
 
 from kafka import KafkaAdminClient
 from kafka.errors import TopicAlreadyExistsError, UnknownTopicOrPartitionError
@@ -12,7 +12,8 @@ kac = KafkaAdminClient()
 
 def create_topics(topics=None):
     if not topics:
-        with open(os.path.join(os.path.dirname(sys.argv[0]), "./topics.json"), "r") as fh:
+        abs_path = os.path.abspath(sys.argv[0])
+        with open(os.path.join(os.path.dirname(abs_path), "etc/topics.json"), "r") as fh:
             topics_json = json.load(fh)
         topics = [NewTopic(**x) for x in topics_json]
     else:

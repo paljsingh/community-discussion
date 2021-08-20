@@ -19,10 +19,12 @@ class VideoPostCreator:
         video = VideoFileClip("demo.mp4").subclip(start, end)
 
         name = '{}.mp4'.format(str.lower(f.word()))
-        video.write_videofile(name, fps=25)
+        path = 'var/data/images/{}'.format(name)
+
+        video.write_videofile(path, fps=25)
 
         tags = ','.join([f.word() for i in range(random.randint(1, 5))])
-        with open(name, 'rb') as fh:
+        with open(path, 'rb') as fh:
             resp = requests.post('{}/new'.format(self.url), json={'name': name, 'tags': tags}, files={'content': fh},
                                  headers={'Authorization': 'Bearer {}'.format(self.token)})
 

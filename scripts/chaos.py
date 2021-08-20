@@ -2,12 +2,12 @@ import os
 import random
 import sys
 
-from utils.communities import CommunityCreator
-from utils.imageposts import ImagePostCreator
-from utils.posts import PostCreator
-from utils.usergroups import UserGroupCreator
-from utils.users import UserCreator
-from utils.videoposts import VideoPostCreator
+from lib.communities import CommunityCreator
+from lib.imageposts import ImagePostCreator
+from lib.posts import PostCreator
+from lib.usergroups import UserGroupCreator
+from lib.users import UserCreator
+from lib.videoposts import VideoPostCreator
 
 
 class Chaos:

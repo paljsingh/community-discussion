@@ -61,7 +61,13 @@ def create_new_post(community_id, my_id, is_admin=False):
 @CustomJWTVerifier.verify_jwt_token
 def create_new_image_post(community_id, my_id, is_admin=False):
     allowed_ext = ['png', 'jpg', 'jpeg', 'gif']
+
+    data = request.get_json()
     new_image_post = ImagePost(created_by=my_id, community_id=community_id)
+
+    if data.get('name'):
+        new_image_post.name = data['name']
+
     file = request.files['content']
     ext = file.filename.split('.')[1] if file.filename else None
     if ext in allowed_ext:
@@ -73,7 +79,8 @@ def create_new_image_post(community_id, my_id, is_admin=False):
                                  'action': 'new image'
                                  })
 
-        return app.make_response(new_image_post.to_son())
+        return app.make_response(json.dumps(
+            {'_id': new_image_post.id, 'name': new_image_post.name}))
     else:
         abort(HTTPStatus.PRECONDITION_FAILED)
 
@@ -82,7 +89,12 @@ def create_new_image_post(community_id, my_id, is_admin=False):
 @CustomJWTVerifier.verify_jwt_token
 def create_new_video_post(community_id, my_id, is_admin=False):
     allowed_ext = ['.mp4', '.mkv', '.mov']
+    data = request.get_json()
     new_video_post = VideoPost(created_by=my_id, community_id=community_id)
+
+    if data.get('name'):
+        new_video_post.name = data['name']
+
     file = request.files['content']
     ext = file.filename.split('.')[1] if file.filename else None
 
@@ -95,7 +107,8 @@ def create_new_video_post(community_id, my_id, is_admin=False):
                                  'action': 'new video'
                                  })
 
-        return app.make_response(new_video_post.to_son())
+        return app.make_response(json.dumps(
+            {'_id': new_video_post.id, 'name': new_video_post.name}))
     else:
         abort(HTTPStatus.PRECONDITION_FAILED)
 

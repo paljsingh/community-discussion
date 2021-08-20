@@ -29,7 +29,7 @@ run_kafka() {
 
   echo "creating kafka topics"
   sleep 5
-  python3 kafka/kafka-topics.py create
+  python3 scripts/kafka-topics.py create
 }
 
 run_mongo() {
