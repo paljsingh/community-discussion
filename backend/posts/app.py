@@ -1,3 +1,5 @@
+import json
+from functools import partial
 from http import HTTPStatus
 
 from pymodm import MongoModel
@@ -18,7 +20,8 @@ from flask import request
 
 from common.db import Db
 from common.utils import FlaskUtils
-
+from kafka import KafkaProducer
+import atexit
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +30,10 @@ logger = logging.getLogger(__name__)
 app = CustomFlask(__name__)
 app.config['MONGODB_SETTINGS'] = {'host': app.conf.get('db_uri')}
 db = Db()
+producer = KafkaProducer(bootstrap_servers=app.conf.get('kafka_endpoints'),
+                         value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
+atexit.register(partial(FlaskUtils.graceful_shutdown, db=db, kafka_producer=producer))
 
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
@@ -40,6 +46,10 @@ def create_new_post(community_id, my_id, is_admin=False):
     content = request.get_json()
     new_post = Post(created_by=my_id, content=content, community_id=community_id)
     new_post.save()
+
+    # notify kafka about new post
+    producer.send('communities', {'id': new_post.id, 'content': new_post.content, 'community_id': community_id,
+                                  'user_id': my_id, 'creation_date': new_post.creation_date})
     return app.make_response(new_post.to_son())
 
 
@@ -53,6 +63,10 @@ def create_new_image_post(community_id, my_id, is_admin=False):
     if ext in allowed_ext:
         new_image_post.file = File(file)
         new_image_post.save()
+
+        producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'community_id': community_id,
+                                 'user_id': my_id, 'creation_date': new_image_post.creation_date})
+
         return app.make_response(new_image_post.to_son())
     else:
         abort(HTTPStatus.PRECONDITION_FAILED)
@@ -69,6 +83,10 @@ def create_new_video_post(community_id, my_id, is_admin=False):
     if ext in allowed_ext:
         new_video_post.file = File(file)
         new_video_post.save()
+
+        producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'community_id': community_id,
+                                 'user_id': my_id, 'creation_date': new_video_post.creation_date})
+
         return app.make_response(new_video_post.to_son())
     else:
         abort(HTTPStatus.PRECONDITION_FAILED)
@@ -146,6 +164,10 @@ def create_new_usergroup_post(usergroup_id, my_id, is_admin=False):
     content = request.get_json()
     new_post = Post(created_by=my_id, content=content, usergroup_id=usergroup_id)
     new_post.save()
+
+    producer.send('posts', {'id': new_post.id, 'name': new_post.name, 'usergroup_id': usergroup_id,
+                            'user_id': my_id, 'creation_date': new_post.creation_date})
+
     return app.make_response(new_post.to_son())
 
 
@@ -159,6 +181,10 @@ def create_new_usergroup_image_post(usergroup_id, my_id, is_admin=False):
     if ext in allowed_ext:
         new_image_post.file = File(file)
         new_image_post.save()
+
+        producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'usergroup_id': usergroup_id,
+                                 'user_id': my_id, 'creation_date': new_image_post.creation_date})
+
         return app.make_response(new_image_post.to_son())
     else:
         abort(HTTPStatus.PRECONDITION_FAILED)
@@ -175,6 +201,10 @@ def create_new_usergroup_video_post(usergroup_id, my_id, is_admin=False):
     if ext in allowed_ext:
         new_video_post.file = File(file)
         new_video_post.save()
+
+        producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'usergroup_id': usergroup_id,
+                                 'user_id': my_id, 'creation_date': new_video_post.creation_date})
+
         return app.make_response(new_video_post.to_son())
     else:
         abort(HTTPStatus.PRECONDITION_FAILED)

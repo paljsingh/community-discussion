@@ -1,3 +1,6 @@
+import json
+from functools import partial
+
 from pymodm import MongoModel
 from pymodm.fields import CharField, DateTimeField
 from pymongo.write_concern import WriteConcern
@@ -11,9 +14,11 @@ from datetime import datetime
 from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
 from werkzeug.exceptions import HTTPException, abort
-from flask import request
 from common.db import Db
 from common.utils import FlaskUtils
+from kafka import KafkaProducer
+import atexit
+
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +28,11 @@ app = CustomFlask(__name__)
 app.config['MONGODB_SETTINGS'] = {'host': app.conf.get('db_uri')}
 db = Db()
 
+producer = KafkaProducer(bootstrap_servers=app.conf.get('kafka_endpoints'),
+                         value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+
+atexit.register(partial(FlaskUtils.graceful_shutdown, db=db, kafka_producer=producer))
+
 
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
@@ -31,13 +41,16 @@ for cls in HTTPException.__subclasses__():
 @app.route("/api/v1/users/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
 def create_dummy_user(my_id, is_admin=False):
-    print("called /api/v1/users/new")
     if not is_admin:
         abort(HTTPStatus.FORBIDDEN, description="/api/v1/users/new needs admin privileges!")
 
     new_user = User()
     new_user.fake_info()
     new_user.save()
+
+    # push a new user event
+    producer.send('users', {'id': new_user.id, 'name': new_user.name,
+                            'creation_date': new_user.creation_date, 'action': 'new user'})
 
     return app.make_response(new_user.to_son())
 

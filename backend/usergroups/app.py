@@ -1,3 +1,5 @@
+import json
+from functools import partial
 from http import HTTPStatus
 
 from pymodm import MongoModel
@@ -18,6 +20,8 @@ from common.customverifier import CustomJWTVerifier
 from common.db import Db
 from common.utils import FlaskUtils
 from users.app import User
+from kafka import KafkaProducer
+import atexit
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
@@ -27,6 +31,10 @@ app = CustomFlask(__name__)
 app.config['MONGODB_SETTINGS'] = {'host': app.conf.get('db_uri')}
 db = Db()
 
+producer = KafkaProducer(bootstrap_servers=app.conf.get('kafka_endpoints'),
+                         value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+
+atexit.register(partial(FlaskUtils.graceful_shutdown, db=db, kafka_producer=producer))
 
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
@@ -42,7 +50,6 @@ def create_temp_usergroup(my_id, is_admin=False):
     :param is_admin:
     :return:
     """
-    print("post usergroups new")
 
     data = request.get_json()
     other_user_id = data.get('user_id')
@@ -55,10 +62,8 @@ def create_temp_usergroup(my_id, is_admin=False):
     usergroups = db.retrieve(
         Usergroup, filters={'users': {'$all': user_ids}}, to_son=False, pagination=False
     )
-    print("post usergroups ug")
 
     if not usergroups:
-        print("not ug")
 
         new_usergroup = Usergroup(created_by=my_id)
         new_usergroup.fake_info()
@@ -71,10 +76,14 @@ def create_temp_usergroup(my_id, is_admin=False):
             new_usergroup.users = user_ids
         new_usergroup.save()
         usergroup = new_usergroup
+
+        # push a new usergroup event
+        producer.send('usergroups', {'id': usergroup.id, 'name': usergroup.name, 'tags': usergroup.tags,
+                                     'user_id': my_id, 'creation_date': usergroup.creation_date,
+                                     'action': 'new usergroup'
+                                     })
     else:
-        print("has users", user_ids)
         usergroup = usergroups[0]
-        print("has ", usergroup.to_son())
 
     users = db.retrieve(User, filters={'_id': {'$in': user_ids}}, select_columns=['_id', 'name'],
                         pagination=False, to_son=True)

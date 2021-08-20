@@ -1,3 +1,6 @@
+import json
+from functools import partial
+
 from pymodm import MongoModel
 from pymodm.fields import CharField, DateTimeField, ListField
 from pymongo.write_concern import WriteConcern
@@ -17,6 +20,8 @@ from flask import request
 from common.db import Db
 from common.utils import FlaskUtils
 from usergroups.app import Usergroup
+from kafka import KafkaProducer
+import atexit
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +30,10 @@ logger = logging.getLogger(__name__)
 app = CustomFlask(__name__)
 app.config['MONGODB_SETTINGS'] = {'host': app.conf.get('db_uri')}
 db = Db()
+producer = KafkaProducer(bootstrap_servers=app.conf.get('kafka_endpoints'),
+                         value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
+atexit.register(partial(FlaskUtils.graceful_shutdown, db=db, kafka_producer=producer))
 
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
@@ -48,6 +56,11 @@ def create_new_community(my_id, is_admin=False):
         new_community.users = data['users']
 
     new_community.save()
+
+    # push a new community event
+    producer.send('communities', {'id': new_community.id, 'name': new_community.name, 'tags': new_community.tags,
+                                  'user_id': my_id, 'creation_date': new_community.creation_date})
+
     return app.make_response(new_community.to_son())
 
 
@@ -97,6 +110,12 @@ def invite_user_to_community(community_id, user_id, my_id, is_admin=False):
     resp = app.make_response(community)
     resp.headers['Location'] = '/api/v1/communities/{}/users/{}/invite/{}'.format(
         community_id, user_id, invite_id)
+
+    # push a new community event
+    producer.send('invites', {'id': invite_id, 'community_id': community_id,
+                              'invite_by_user_id': my_id, 'invite_to_user_id': user_id,
+                              'creation_date': community.creation_date, 'action': 'invite'})
+
     return resp
 
 
@@ -121,6 +140,10 @@ def accept_invite_to_community(community_id, invite_id, my_id, is_admin=False):
         # add user to the community list
         community.add_user(my_id)
 
+        # push a new community event
+        producer.send('invites', {'id': invite_id, 'community_id': community_id,
+                                  'user_id': my_id, 'creation_date': invite.creation_date, 'action': 'accept'})
+
         resp = app.make_response(community.to_son())
         resp.headers['Location'] = '/api/v1/communities/{}'.format(community_id)
         return resp
@@ -138,6 +161,11 @@ def decline_invite_to_community(community_id, invite_id, my_id, is_admin=False):
         invite.updated_on = datetime.utcnow()
         invite.save()
 
+        # push a new community event
+        producer.send('invites', {'id': invite_id, 'community_id': community_id,
+                                  'user_id': my_id, 'creation_date': invite.creation_date,
+                                  'action': 'decline'})
+
     return app.make_response({})
 
 
@@ -150,6 +178,11 @@ def subscribe_to_community(community_id, my_id, is_admin=False):
 
     # add user to the community list
     community.add_user(my_id)
+
+    # push a new community event
+    producer.send('subscribes', {'community_id': community_id,
+                                 'user_id': my_id, 'creation_date': datetime.utcnow().timestamp(),
+                                 'action': 'subscribe'})
 
     resp = app.make_response(community.to_son())
     resp.headers['Location'] = '/api/v1/communities/{}'.format(community_id)
@@ -165,6 +198,12 @@ def unsubscribe_to_community(community_id, my_id, is_admin=False):
 
     # add user to the community list
     community.remove_user(my_id)
+
+    # push a new community event
+    producer.send('subscribes', {'community_id': community_id,
+                                 'user_id': my_id, 'creation_date': datetime.utcnow().timestamp(),
+                                 'action': 'unsubscribe'})
+
     return app.make_response({})
 
 
@@ -208,8 +247,12 @@ def create_usergroup(community_id, my_id, is_admin=False):
         new_usergroup.users = data['users']
 
     new_usergroup.save()
-    return app.make_response(new_usergroup.to_son())
 
+    # push a new community event
+    producer.send('usergroup', {'id': new_usergroup.id, 'name': new_usergroup.name, 'tags': new_usergroup.tags,
+                                'user_id': my_id, 'creation_date': new_usergroup.creation_date})
+
+    return app.make_response(new_usergroup.to_son())
 
 
 @app.route("/api/v1/communities/<community_id>/usergroups", methods=['GET'])
