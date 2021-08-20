@@ -19,3 +19,5 @@ for service in mongo kafka zookeeper; do
     docker stop $service && \
     printf "$green%10.10s$default\n" "[ OK ]" || printf "$red%10.10s$default\n" "[ FAILED ]"
 done
+
+ps -ef | grep logs/c18n.log | grep -v grep | awk '{ print $2 }' | xargs kill -9

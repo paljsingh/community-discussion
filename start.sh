@@ -1,8 +1,8 @@
 #!/bin/bash
 
+network="kafka-network"
 run_kafka() {
   echo "creating docker network"
-  network="kafka-network"
   if ! docker network inspect $network &>/dev/null; then
       docker network create $network --driver bridge
   fi
@@ -21,11 +21,15 @@ run_kafka() {
     docker run --rm -d --name kafka \
       --network $network \
       -e ALLOW_PLAINTEXT_LISTENER=yes \
-      -e KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper-server:2181 \
+      -e KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181 \
       -e KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
       -p 9092:9092 \
       bitnami/kafka:latest
   fi
+
+  echo "creating kafka topics"
+  sleep 5
+  python3 kafka/kafka-topics.py create
 }
 
 run_mongo() {
@@ -90,8 +94,36 @@ tail_logs() {
 }
 
 source $PWD/venv/bin/activate
-run_kafka
-run_mongo
-run_backend
-run_frontend
-tail_logs
+
+if [ $# -eq 1 -a $1 = '-h' ]; then
+  cat <<EOF
+usage
+$0
+  run all the components.
+
+$0 component [component] ... 
+  run only the given component(s)
+
+  components can be one of:
+  mongo
+  kafka
+  backend
+  frontend
+EOF
+exit 0
+fi
+
+case $# in
+  0)
+    run_kafka
+    run_mongo
+    run_backend
+    run_frontend
+    tail_logs
+    ;;
+  *)
+    for i in $@ ; do
+      run_$i
+    done
+  ;;
+esac
