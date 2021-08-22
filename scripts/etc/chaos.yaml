@@ -1,0 +1,19 @@
+# proportionate weights for various resources.
+# The sum does NOT have to be equal to 100.
+volume_distribution:
+  posts: 55
+  image_posts: 20
+  video_posts: 5
+  users: 10
+  usergroups: 5
+  communities: 5
+
+flask_host: 'http://localhost'
+
+endpoints:
+  user_api_endpoint: '{flask_host}:5000/api/v1/users'
+  communities_api_endpoint: '{flask_host}:5001/api/v1/communities'
+  usergroups_api_endpoint: '{flask_host}:5001/api/v1/communities/{community_id}/usergroups'
+  text_posts_api_endpoint: '{flask_host}:5003/api/v1/communities/{community_id}/posts'
+  image_posts_api_endpoint: '{flask_host}:5003/api/v1/communities/{community_id}/images'
+  video_posts_api_endpoint: '{flask_host}:5003/api/v1/communities/{community_id}/videos'
