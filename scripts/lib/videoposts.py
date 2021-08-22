@@ -1,3 +1,4 @@
+import json
 import random
 from faker import Faker
 from moviepy.editor import VideoFileClip
@@ -14,23 +15,26 @@ class VideoPostCreator:
 
     def create(self):
         f = Faker()
-        start = random.randint(0, 95)   # demo video clip is 100 seconds long
+        start = random.randint(0, 25)   # demo video clip is 30 seconds long
         end = start + random.randint(1, 5)
-        video = VideoFileClip("demo.mp4").subclip(start, end)
+        video = VideoFileClip("earth.mp4").subclip(start, end)
 
         name = '{}.mp4'.format(str.lower(f.word()))
-        path = 'var/data/images/{}'.format(name)
+        path = 'var/data/videos/{}'.format(name)
 
         video.write_videofile(path, fps=25)
 
-        tags = ','.join([f.word() for i in range(random.randint(1, 5))])
         with open(path, 'rb') as fh:
-            resp = requests.post('{}/new'.format(self.url), json={'name': name, 'tags': tags}, files={'content': fh},
+            files = {
+                'json': (None, json.dumps({'name': name}), 'application/json'),
+                'content': (name, fh, 'application/octet-stream')
+            }
+            resp = requests.post('{}/new'.format(self.url), files=files,
                                  headers={'Authorization': 'Bearer {}'.format(self.token)})
 
             if resp.status_code == 200:
                 data = resp.json()
-                print(data['_id'], data['name'], data['tags'])
+                print(data['_id'], data['name'])
                 return data
             else:
                 print("ERROR - {}".format(resp.content))

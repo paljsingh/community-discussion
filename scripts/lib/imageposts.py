@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import sys
@@ -17,11 +18,16 @@ class ImagePostCreator:
         name = '{}.png'.format(f.word())
         path = 'var/data/images/{}'.format(name)
         # generate a random single color image of size 100x100
-        file = Image.new('RGB', (100, 100), color=(random.randint(1, 255), random.randint(1, 255), random.randint(1, 255)))
+        file = Image.new('RGB', (100, 100), color=(
+            random.randint(1, 255), random.randint(1, 255), random.randint(1, 255)))
         file.save(path)
 
         with open(path, 'rb') as fh:
-            resp = requests.post('{}/new'.format(self.url), files={'content': fh}, json={'name': name},
+            files = {
+                'json': (None, json.dumps({'name': name}), 'application/json'),
+                'content': (name, fh, 'application/octet-stream')
+            }
+            resp = requests.post('{}/new'.format(self.url), files=files,
                                  headers={'Authorization': 'Bearer {}'.format(self.token)})
 
             if resp.status_code == 200:

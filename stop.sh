@@ -3,19 +3,27 @@ red='\033[1;31m'
 green='\033[1;32m'
 default='\033[0m'
 
+_kill_with_exit_status() {
+  if [ $# -ne 1 ]; then
+    echo "needs process-name or string"
+    exit 1
+  fi
+  kill -9 $(ps -ef | grep "$1" | grep -v grep | awk 'BEGIN{status=1} { print $2; status=0 } END{exit status}') 2>/dev/null
+}
+
 stop_backend() {
   printf "%-40s" "stopping backend flask servers ... " && \
-    ps -ef | grep community-discussion/venv/bin/flask | grep -v grep | awk '{ print $2 }' | xargs kill -9 && \
+    _kill_with_exit_status 'community-discussion/venv/bin/flask' && \
     printf "$green%10.10s$default\n" "[ OK ]" || printf "$red%10.10s$default\n" "[ FAILED ]"
 
   printf "%-40s" "stopping backend chat server ..." && \
-    ps -ef | grep chat/app.py | grep -v grep | awk '{ print $2 }' | xargs kill -9 && \
+    _kill_with_exit_status 'chat/app.py' && \
     printf "$green%10.10s$default\n" "[ OK ]" || printf "$red%10.10s$default\n" "[ FAILED ]"
 }
 
 stop_frontend() {
   printf "%-40s" "stopping frontend node server ... " && \
-    ps -ef | grep community-discussion/frontend/node_modules/.bin/vue-cli-service | grep -v grep | awk '{ print $2 }' | xargs kill -9 && \
+    _kill_with_exit_status 'community-discussion/frontend/node_modules/.bin/vue-cli-service' && \
     printf "$green%10.10s$default\n" "[ OK ]" || printf "$red%10.10s$default\n" "[ FAILED ]"
 }
 
@@ -26,7 +34,7 @@ _stop_service() {
   fi
 
   printf "%-40s" "stopping $1 service ... " && \
-    docker stop $1 && \
+    docker stop $1 2>/dev/null && \
     printf "$green%10.10s$default\n" "[ OK ]" || printf "$red%10.10s$default\n" "[ FAILED ]"
 }
 
@@ -45,7 +53,10 @@ stop_spark() {
 }
 
 stop_logs() {
-  ps -ef | grep logs/c18n.log | grep -v grep | awk '{ print $2 }' | xargs kill -9
+  printf "%-40s" "stopping logs ... " && \
+    _kill_with_exit_status 'logs/c18n.log' && \
+    printf "$green%10.10s$default\n" "[ OK ]" || printf "$red%10.10s$default\n" "[ FAILED ]"
+
 }
 
 if [ $# -eq 1 -a "$1" = '-h' ]; then

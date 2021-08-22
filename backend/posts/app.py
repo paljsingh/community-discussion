@@ -1,11 +1,9 @@
 import json
-import os
 from functools import partial
 from http import HTTPStatus
-from typing import Dict
 
 from pymodm import MongoModel
-from pymodm.files import File, Storage
+from pymodm.files import File
 from pymodm.fields import CharField, DateTimeField, ImageField, FileField
 from pymongo.write_concern import WriteConcern
 
@@ -45,8 +43,12 @@ for cls in HTTPException.__subclasses__():
 @CustomJWTVerifier.verify_jwt_token
 def create_new_post(community_id, my_id, is_admin=False):
 
-    content = request.get_json()
-    new_post = TextPost(created_by=my_id, content=content, community_id=community_id)
+    json_content = request.get_json()
+    if not json_content and not json_content.get('content'):
+        abort(HTTPStatus.PRECONDITION_FAILED)
+
+    text_content = json_content['content']
+    new_post = TextPost(created_by=my_id, content=text_content, community_id=community_id)
     new_post.save()
 
     # notify kafka about new post
@@ -61,23 +63,21 @@ def create_new_post(community_id, my_id, is_admin=False):
 @CustomJWTVerifier.verify_jwt_token
 def create_new_image_post(community_id, my_id, is_admin=False):
     allowed_ext = ['png', 'jpg', 'jpeg', 'gif']
-
-    data = request.get_json()
+    filename = json.loads(request.form['json'])['name']
     new_image_post = ImagePost(created_by=my_id, community_id=community_id)
 
-    if data.get('name'):
-        new_image_post.name = data['name']
+    if filename:
+        new_image_post.name = filename
 
-    file = request.files['content']
-    ext = file.filename.split('.')[1] if file.filename else None
+    file_content = request.files['content']
+    ext = filename.split('.')[1] if filename else None
+
     if ext in allowed_ext:
-        new_image_post.file = File(file)
+        new_image_post.file = file_content
         new_image_post.save()
-
         producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'community_id': community_id,
                                  'user_id': my_id, 'creation_date': new_image_post.creation_date.isoformat(),
-                                 'action': 'new image'
-                                 })
+                                 'action': 'new image'})
 
         return app.make_response(json.dumps(
             {'_id': new_image_post.id, 'name': new_image_post.name}))
@@ -88,24 +88,22 @@ def create_new_image_post(community_id, my_id, is_admin=False):
 @app.route("/api/v1/communities/<community_id>/videos/new", methods=['POST'])
 @CustomJWTVerifier.verify_jwt_token
 def create_new_video_post(community_id, my_id, is_admin=False):
-    allowed_ext = ['.mp4', '.mkv', '.mov']
-    data = request.get_json()
+    allowed_ext = ['mp4', 'mkv', 'mov']
+    filename = json.loads(request.form['json'])['name']
     new_video_post = VideoPost(created_by=my_id, community_id=community_id)
 
-    if data.get('name'):
-        new_video_post.name = data['name']
+    file_content = request.files['content']
+    if filename:
+        new_video_post.name = filename
 
-    file = request.files['content']
-    ext = file.filename.split('.')[1] if file.filename else None
+    ext = filename.split('.')[1] if filename else None
 
     if ext in allowed_ext:
-        new_video_post.file = File(file)
+        new_video_post.file = file_content
         new_video_post.save()
-
         producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'community_id': community_id,
                                  'user_id': my_id, 'creation_date': new_video_post.creation_date.isoformat(),
-                                 'action': 'new video'
-                                 })
+                                 'action': 'new video'})
 
         return app.make_response(json.dumps(
             {'_id': new_video_post.id, 'name': new_video_post.name}))
@@ -314,42 +312,6 @@ def search_usergroup_posts(usergroup_id, my_id, is_admin=False):
 # api to update community info.
 # api for invite status check.
 
-class GridFsStore(Storage):
-
-    def __init__(self, upload_to):
-        self.upload_to = upload_to
-
-    def _path(self, name):
-        _, name = os.path.split(name)
-        return os.path.join(self.upload_to, name)
-
-    def open(self, name, mode='rb'):
-        return File(open(self._path(name), mode))
-
-    def save(self, name, content, metadata=None):
-        if not os.path.exists(self.upload_to):
-            os.makedirs(self.upload_to)
-
-        dest = None
-        try:
-            for chunk in content.chunks():
-                if dest is None:
-                    mode = 'wb' if isinstance(chunk, bytes) else 'wt'
-                    dest = open(name, mode)
-                dest.write(chunk)
-            # Create an empty file.
-            if dest is None:
-                dest = open(name, 'wb')
-        finally:
-            dest.close()
-        return name
-
-    def delete(self, name):
-        os.remove(self._path(name))
-
-    def exists(self, name):
-        return os.path.exists(self._path(name))
-
 
 class Post(MongoModel):
     """
@@ -380,7 +342,7 @@ class TextPost(Post):
 
 
 class ImagePost(Post):
-    file = ImageField(required=True, storage=GridFsStore('images'))
+    file = ImageField(required=True)
     name = CharField(required=False, blank=True)
 
     class Meta:
@@ -389,7 +351,7 @@ class ImagePost(Post):
 
 
 class VideoPost(Post):
-    file = FileField(required=True, storage=GridFsStore('videos'))
+    file = FileField(required=True)
     name = CharField(required=False, blank=True)
 
     class Meta:

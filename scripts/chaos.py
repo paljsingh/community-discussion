@@ -26,59 +26,64 @@ class Chaos:
         sum_vd = sum([v for k, v in Chaos.volume_distribution.items()])
         prob = dict({k: v/sum_vd for k, v in Chaos.volume_distribution.items()})
 
-        for i in range(total):
-            # keep the order as is, so that we have users and communities created before adding posts to them.
-            users = []
-            for j in range(int(prob['users']*total)):
-                users.append(UserCreator(kvargs['user_api_endpoint'], admin_token).create())
-            print("created {} users.".format(len(users)))
+        # keep the order as is, so that we have users and communities created before adding posts to them.
+        users = []
+        print("user: id\tname")
+        for j in range(int(prob['users']*total)):
+            users.append(UserCreator(kvargs['user_api_endpoint'], admin_token).create())
+        print("created {} users.".format(len(users)))
 
-            communities = []
-            for j in range(int(prob['communities']*total)):
-                # fetch a random user token
-                user_token = users[random.randint(0, len(users)-1)]['token']
-                communities.append(CommunityCreator(kvargs['communities_api_endpoint'], user_token).create())
-            print("created {} communities.".format(len(communities)))
+        communities = []
+        print("community: id\tname\t[tags]")
+        for j in range(int(prob['communities']*total)):
+            # fetch a random user token
+            user_token = users[random.randint(0, len(users)-1)]['token']
+            communities.append(CommunityCreator(kvargs['communities_api_endpoint'], user_token).create())
+        print("created {} communities.".format(len(communities)))
 
-            usergroups = []
-            for j in range(int(prob['usergroups']*total)):
-                # fetch a random user token
-                rand1 = random.randint(0, len(users)-1)
-                rand2 = random.randint(0, len(users)-1)
-                user1_token = users[rand1]['token']
-                user1_id = users[rand1]['_id']
-                user2_id = users[rand2]['_id']
+        usergroups = []
+        print("usergroups: id\tname\t[tags]")
+        for j in range(int(prob['usergroups']*total)):
+            # fetch a random user token
+            rand1 = random.randint(0, len(users)-1)
+            rand2 = random.randint(0, len(users)-1)
+            user1_token = users[rand1]['token']
+            user1_id = users[rand1]['_id']
+            user2_id = users[rand2]['_id']
 
-                usergroups.append(UserGroupCreator(kvargs['usergroups_api_endpoint'], user1_token, [user1_id, user2_id]).create())
-            print("created {} usergroups.".format(len(usergroups)))
+            usergroups.append(UserGroupCreator(kvargs['usergroups_api_endpoint'], user1_token, [user1_id, user2_id]).create())
+        print("created {} usergroups.".format(len(usergroups)))
 
-            posts = []
-            for j in range(int(prob['posts']*total)):
-                # fetch a random user token
-                user_token = users[random.randint(0, len(users)-1)]['token']
-                # fetch a random community
-                community_id = communities[random.randint(0, len(communities)-1)]['_id']
-                posts.append(PostCreator(kvargs['text_posts_api_endpoint'].replace(
-                    '<community_id>', community_id), user_token).create())
-            print("created {} posts.".format(len(posts)))
+        posts = []
+        print("text posts: id\tcontent")
+        for j in range(int(prob['posts']*total)):
+            # fetch a random user token
+            user_token = users[random.randint(0, len(users)-1)]['token']
+            # fetch a random community
+            community_id = communities[random.randint(0, len(communities)-1)]['_id']
+            posts.append(PostCreator(kvargs['text_posts_api_endpoint'].replace(
+                '<community_id>', community_id), user_token).create())
+        print("created {} posts.".format(len(posts)))
 
-            image_posts = []
-            for j in range(int(prob['image_posts']*total)):
-                # fetch a random user token
-                user_token = users[random.randint(0, len(users)-1)]['token']
-                community_id = communities[random.randint(0, len(communities)-1)]['_id']
-                image_posts.append(ImagePostCreator(kvargs['image_posts_api_endpoint'].replace(
-                    '<community_id>', community_id), user_token).create())
-            print("created {} image posts.".format(len(image_posts)))
+        image_posts = []
+        print("image posts: id\tfilename")
+        for j in range(int(prob['image_posts']*total)):
+            # fetch a random user token
+            user_token = users[random.randint(0, len(users)-1)]['token']
+            community_id = communities[random.randint(0, len(communities)-1)]['_id']
+            image_posts.append(ImagePostCreator(kvargs['image_posts_api_endpoint'].replace(
+                '<community_id>', community_id), user_token).create())
+        print("created {} image posts.".format(len(image_posts)))
 
-            video_posts = []
-            for j in range(int(prob['video_posts']*total)):
-                # fetch a random user token
-                user_token = users[random.randint(0, len(users)-1)]['token']
-                community_id = communities[random.randint(0, len(communities)-1)]['_id']
-                video_posts.append(VideoPostCreator(kvargs['video_posts_api_endpoint'].replace(
-                    '<community_id>', community_id), user_token).create())
-            print("created {} video posts.".format(len(video_posts)))
+        video_posts = []
+        print("video posts: id\tfilename")
+        for j in range(int(prob['video_posts']*total)):
+            # fetch a random user token
+            user_token = users[random.randint(0, len(users)-1)]['token']
+            community_id = communities[random.randint(0, len(communities)-1)]['_id']
+            video_posts.append(VideoPostCreator(kvargs['video_posts_api_endpoint'].replace(
+                '<community_id>', community_id), user_token).create())
+        print("created {} video posts.".format(len(video_posts)))
 
 
 if __name__ == '__main__':
@@ -108,5 +113,5 @@ if __name__ == '__main__':
         'video_posts_api_endpoint': '{}:{}/api/v1/communities/<community_id>/videos'.format(host, 5003)
     }
 
-    total_requests = int(sys.argv[1]) if len(sys.argv) > 0 else 1000
+    total_requests = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
     Chaos.create_everything(os.environ.get('ADMIN_TOKEN'), total_requests, **endpoints)
