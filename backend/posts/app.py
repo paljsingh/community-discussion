@@ -52,10 +52,11 @@ def create_new_post(community_id, my_id, is_admin=False):
     new_post.save()
 
     # notify kafka about new post
-    producer.send('communities', {'id': new_post.id, 'content': new_post.content, 'community_id': community_id,
-                                  'user_id': my_id, 'creation_date': new_post.creation_date.isoformat(),
-                                  'action': 'new post'
-                                  })
+    # producer.send('communities', {'id': new_post.id, 'content': new_post.content, 'community_id': community_id,
+    #                               'user_id': my_id, 'creation_date': new_post.creation_date.isoformat(),
+    #                               'action': 'new post'
+    #                               })
+    producer.send('posts', 'new post {}'.format(new_post.content))
     return app.make_response(new_post.to_son())
 
 

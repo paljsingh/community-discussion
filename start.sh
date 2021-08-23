@@ -59,13 +59,23 @@ run_spark() {
     docker run --rm -d --name spark-master \
       --network=$network \
       -e SPARK_MODE=master \
+      -p 7077:7077 \
+      -p 7080:8080 \
       bitnami/spark
+#      -v $PWD/var/data/spark/jars/spark-sql-kafka-0-10_2.12-3.0.1.jar:/opt/bitnami/spark/jars/spark-sql-kafka-0-10_2.12-3.0.1.jar \
+#      -v $PWD/var/data/spark/jars/spark-streaming-kafka-0-10-assembly_2.12-3.0.1.jar:/opt/bitnami/spark/jars/spark-streaming-kafka-0-10-assembly_2.12-3.0.1.jar \
+#      -v $PWD/var/data/spark/jars/spark-token-provider-kafka-0-10_2.12-3.0.1.jar:/opt/bitnami/spark/jars/spark-token-provider-kafka-0-10_2.12-3.0.1.jar \
+#      -v $PWD/var/data/spark/jars/spark-tags_2.12-3.0.1.jar:/opt/bitnami/spark/jars/spark-tags_2.12-3.0.1.jar \
+#      -v $PWD/var/data/spark/jars/kafka-clients-2.4.1.jar:/opt/bitnami/spark/jars/kafka-clients-2.4.1.jar \
+#      -v $PWD/var/data/spark/jars/commons-pool2-2.6.2.jar:/opt/bitnami/spark/jars/commons-pool2-2.6.2.jar \
 
     docker run --rm -d --name spark-worker \
       --network=$network \
       -e SPARK_MASTER_URL=spark://spark-master:7077 \
       -e SPARK_MODE=worker \
+      -p 7081:8081 \
       bitnami/spark
+#      -v $PWD/var/data/spark/jars/spark-sql-kafka-0-10_2.12-3.0.1.jar:/opt/bitnami/spark/jars/spark-sql-kafka-0-10_2.12-3.0.1.jar \
   fi
 }
 
