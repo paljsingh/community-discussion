@@ -29,16 +29,16 @@ for i in backend/{users,usergroups,communities,posts,chat} ; do
 done
 
 # extra jars for spark/kafka integration
-mkdir var/data/spark/jars
-curl https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.0.1/spark-sql-kafka-0-10_2.12-3.0.1.jar --output var/data/spark/jars/spark-sql-kafka-0-10_2.12-3.0.1.jar
-curl https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.12/3.0.1/spark-token-provider-kafka-0-10_2.12-3.0.1.jar --output var/data/spark/jars/spark-token-provider-kafka-0-10_2.12-3.0.1.jar
-curl https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10-assembly_2.12/3.0.1/spark-streaming-kafka-0-10-assembly_2.12-3.0.1.jar --output var/data/spark/jars/spark-streaming-kafka-0-10-assembly_2.12-3.0.1.jar
-curl https://repo1.maven.org/maven2/org/apache/spark/spark-tags_2.12/3.0.1/spark-tags_2.12-3.0.1.jar --output var/data/spark/jars/spark-tags_2.12-3.0.1.jar
-curl https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/2.4.1/kafka-clients-2.4.1.jar --output var/data/spark/jars/kafka-clients-2.4.1.jar
-curl https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.6.2/commons-pool2-2.6.2.jar --output var/data/spark/jars/commons-pool2-2.6.2.jar
+mkdir var/jars
+curl https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.0.1/spark-sql-kafka-0-10_2.12-3.0.1.jar --output var/jars/spark-sql-kafka-0-10_2.12-3.0.1.jar
+curl https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.12/3.0.1/spark-token-provider-kafka-0-10_2.12-3.0.1.jar --output var/jars/spark-token-provider-kafka-0-10_2.12-3.0.1.jar
+curl https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10-assembly_2.12/3.0.1/spark-streaming-kafka-0-10-assembly_2.12-3.0.1.jar --output var/jars/spark-streaming-kafka-0-10-assembly_2.12-3.0.1.jar
+curl https://repo1.maven.org/maven2/org/apache/spark/spark-tags_2.12/3.0.1/spark-tags_2.12-3.0.1.jar --output var/jars/spark-tags_2.12-3.0.1.jar
+curl https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/2.4.1/kafka-clients-2.4.1.jar --output var/jars/kafka-clients-2.4.1.jar
+curl https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.6.2/commons-pool2-2.6.2.jar --output var/jars/commons-pool2-2.6.2.jar
 
 # for elasticsearch
-curl https://repo1.maven.org/maven2/org/elasticsearch/elasticsearch-spark-20_2.10/7.14.0/elasticsearch-spark-20_2.10-7.14.0.jar --output var/data/spark/jars/elasticsearch-spark-20_2.10-7.14.0.jar
+curl https://repo1.maven.org/maven2/org/elasticsearch/elasticsearch-spark-20_2.10/7.14.0/elasticsearch-spark-20_2.10-7.14.0.jar --output var/jars/elasticsearch-spark-20_2.10-7.14.0.jar
 
 # spark warehouse
 mkdir spark-warehouse

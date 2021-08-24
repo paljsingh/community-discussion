@@ -8,7 +8,7 @@ from pyspark.sql.types import StructField, StructType, StringType, DoubleType
 
 class SpeedLayer:
 
-    def __init__(self):
+    def __init__(self, topic):
         conf_file_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "etc/spark-config.yaml")
         with open(conf_file_path, 'r') as fh:
             conf = yaml.load(fh, Loader=yaml.FullLoader)
@@ -18,7 +18,7 @@ class SpeedLayer:
             .readStream \
             .format("kafka") \
             .option("kafka.bootstrap.servers", "localhost:9092") \
-            .option("subscribe", "posts,users,communities,videos,images") \
+            .option("subscribe", topic) \
             .load()
 
         df = df_in.drop('_id')
@@ -37,6 +37,9 @@ class SpeedLayer:
 
 
 if __name__ == '__main__':
+    if len(sys.argv) <= 1:
+        print("usage: {} <kafka-topic>".format(sys.argv[0]))
+
     os.environ['PYSPARK_SUBMIT_ARGS'] = \
         '--jars ' \
         + 'var/jars/spark-sql-kafka-0-10_2.12-3.0.1.jar,' \
@@ -47,4 +50,4 @@ if __name__ == '__main__':
         + ' pyspark-shell'
     #     + 'var/jars/spark-tags_2.12-3.0.1.jar,' \
     #     + 'var/jars/spark-token-provider-kafka-0-10_2.12-3.0.1.jar,' \
-    SpeedLayer()
+    SpeedLayer(sys.argv[1])

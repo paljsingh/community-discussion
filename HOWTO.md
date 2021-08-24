@@ -18,9 +18,6 @@ Tested on OSX 11.5.2 with
 > yarn v1.22.5  
   docker-desktop 3.5.2
 
-#### Install Components  
-
-
 ---
 
 Installation
@@ -36,9 +33,10 @@ This will -
       - elasticsearch
 
     also, 
-    - installs python dependencies for the backend services
-    - installis node / vue.js dependencies for the frontend service.
-    - sets up data, config and log directories for the applications.
+    - install python dependencies for the backend services
+    - install node / vue.js dependencies for the frontend service.
+    - set up data, config and log directories for the applications.
+    - download additional jars for spark/kafka and spark/elasticsearch integration.
 
 ---
 
@@ -91,16 +89,23 @@ Caveat:
 
 ---
 
-CLI
+Spark Speed / Batch processing
 
-create random requests:
+In another terminal, run
+python3 ./start.sh sparkspeed
+python3 ./start.sh sparkbatch
+
+These will launch the spark speed and batch job, which display the incoming flow of events on console as well as dumps it to elasticsearch.
+
+---
+Generate random requests to create users, communities, posts etc.
 
 export ADMIN_TOKEN='jwt-token-of-the-admin-user'
 python3 scripts/chaos.py
 or
-python3 scripts/chaos.py 100
+python3 scripts/chaos.py 1000
 
-The script above creates a total of given number of resources (1000 if no arguments specified). The resources can be one of - 
+The script above creates a total of given number of resources (100 if no arguments specified). The resources can be one of - 
 users
 communities
 usergroups
@@ -118,7 +123,6 @@ All the other requests use a random non-admin user's JWT token to simulate cases
 - users posting text / image / video content to the communities
 
 ---
-
 Status
 
 $ ./status.sh 
