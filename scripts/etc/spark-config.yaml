@@ -1,21 +1,88 @@
 speed:
-  num_threads: 2
   batch_interval: 1
   name: 'speed'
-  source_host: "localhost"
-  source_port: 9092
-  source_type: 'kafka'
+  checkpoint_dir: 'var/data/spark/speed'
+  log_dir: 'var/data/spark/speed/logs'
 
 batch:
-  num_threads: 2
   batch_interval: 30
   name: 'batch'
-  source_host: "localhost"
-  source_port: 27087
-  source_type: 'mongo'
+  checkpoint_dir: 'var/data/spark/batch'
+  log_dir: 'var/data/spark/batch/logs'
+
+source:
+  name: 'kafka'
+  host:: 'localhost'
+  port: 9092
 
 sink:
-  doc_type: 'elasticsearch'
-  index: 1
+  name: 'elasticsearch'
   host: 'localhost'
-  port: 9093
+  port: 9200
+
+topics:
+  users:
+    fields:
+    - id
+    - name
+    - creation_date
+    - action
+  communities:
+    fields:
+    - id
+    - name
+    - created_by
+    - tags
+    - creation_date
+    - action
+  usergroups:
+    fields:
+    - id
+    - name
+    - community_id
+    - tags
+    - created_by
+    - creation_date
+    - action
+  posts:
+    fields:
+    - id
+    - community_id
+    - usergroup_id
+    - created_by
+    - content
+    - creation_date
+    - action
+  images:
+    fields:
+    - id
+    - community_id
+    - usergroup_id
+    - created_by
+    - name
+    - creation_date
+    - action
+  videos:
+    fields:
+    - id
+    - community_id
+    - usergroup_id
+    - created_by
+    - name
+    - creation_date
+    - action
+  invites:
+    fields:
+    - id
+    - community_id
+    - invite_by
+    - invite_to
+    - creation_date
+    - action
+  subscribes:
+    fields:
+    - id
+    - community_id
+    - subscribe_by
+    - creation_date
+    - action

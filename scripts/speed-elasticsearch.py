@@ -28,12 +28,6 @@ class SpeedLayer:
             .option("es.port", conf['sink']['port']) \
             .start() \
             .awaitTermination()
-        # df_in \
-        #     .writeStream \
-        #     .format("console") \
-        #     .trigger(processingTime='1 seconds') \
-        #     .start() \
-        #     .awaitTermination()
 
 
 if __name__ == '__main__':

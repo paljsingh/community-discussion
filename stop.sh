@@ -70,6 +70,9 @@ stop_elasticsearch() {
   _stop_service 'elasticsearch'
 }
 
+stop_kibana() {
+  _stop_service 'kibana'
+}
 if [ $# -eq 1 -a "$1" = '-h' ]; then
   cat <<EOF
 usage
@@ -86,6 +89,7 @@ $0 component [component] ...
   sparkbatch
   sparkspeed
   elasticsearch
+  kibana
   backend
   frontend
   logs
@@ -101,6 +105,7 @@ case $# in
     stop_sparkspeed
     stop_mongo
     stop_elasticsearch
+    stop_kibana
     stop_backend
     stop_frontend
     stop_logs

@@ -58,8 +58,13 @@ sparkspeed_status() {
   printf "%-40s" "spark speed ... " && \
     _ps_status 'spark-speed'
 }
+
 elasticsearch_status() {
   _docker_service_status 'elasticsearch'
+}
+
+kibana_status() {
+  _docker_service_status 'kibana'
 }
 
 logs_status() {
@@ -84,6 +89,7 @@ $0 component [component] ...
   sparkspeed
   sparkbatch
   elasticsearch
+  kibana
   backend
   frontend
   logs
@@ -99,6 +105,7 @@ case $# in
     sparkspeed_status
     mongo_status
     elasticsearch_status
+    kibana_status
     backend_status
     frontend_status
     logs_status

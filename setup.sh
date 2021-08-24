@@ -18,11 +18,17 @@ docker pull bitnami/spark:latest
 # pull elastic search image
 docker pull docker.elastic.co/elasticsearch/elasticsearch:7.14.0
 
+# pull kibana for easy to use dashboard 
+docker pull kibana:7.14.0
+
 # setting up yarn packages
 cd frontend ; yarn install ; cd - 1>/dev/null
 
 # setting up directories
 mkdir -p var/data/{mongo,kafka,spark,images,videos} var/config/{mongo,kafka,spark}
+mkdir var/data/spark/{speed,batch}
+mkdir var/data/spark/speed/logs
+mkdir var/data/spark/batch/logs
 for i in backend/{users,usergroups,communities,posts,chat} ; do
   mkdir $i/logs
   touch $i/logs/c18n.log
@@ -38,7 +44,7 @@ curl https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/2.4.1/kafka-c
 curl https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.6.2/commons-pool2-2.6.2.jar --output var/jars/commons-pool2-2.6.2.jar
 
 # for elasticsearch
-curl https://repo1.maven.org/maven2/org/elasticsearch/elasticsearch-spark-20_2.10/7.14.0/elasticsearch-spark-20_2.10-7.14.0.jar --output var/jars/elasticsearch-spark-20_2.10-7.14.0.jar
+icurl https://repo1.maven.org/maven2/org/elasticsearch/elasticsearch-spark-20_2.12/7.14.0/elasticsearch-spark-20_2.12-7.14.0.jar --output var/jars/elasticsearch-spark-20_2.12-7.14.0.jar
 
 # spark warehouse
 mkdir spark-warehouse

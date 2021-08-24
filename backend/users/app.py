@@ -49,8 +49,8 @@ def create_dummy_user(my_id, is_admin=False):
     new_user.save()
 
     # push a new user event
-    producer.send('users', {'id': new_user.id, 'name': new_user.name,
-                            'creation_date': new_user.creation_date.isoformat(), 'action': 'new user'})
+    producer.send('users', '{id},{name},{creation_date},{action}'.format(
+        id=new_user.id, name=new_user.name, creation_date=new_user.creation_date.isoformat(), action='new user'))
 
     return app.make_response(new_user.to_son())
 

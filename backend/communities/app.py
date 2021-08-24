@@ -58,10 +58,10 @@ def create_new_community(my_id, is_admin=False):
     new_community.save()
 
     # push a new community event
-    producer.send('communities', {'id': new_community.id, 'name': new_community.name, 'tags': new_community.tags,
-                                  'user_id': my_id, 'creation_date': new_community.creation_date.isoformat(),
-                                  'action': 'new community'
-                                  })
+    producer.send('communities', '{id},{name},{created_by},{tags},{creation_date},{action}'.format(
+        id=new_community.id, name=new_community.name, created_by=new_community.created_by,
+        creation_date=new_community.creation_date.isoformat(), tags=' '.join(new_community.tags),
+        action='new community'))
 
     return app.make_response(new_community.to_son())
 
@@ -114,10 +114,9 @@ def invite_user_to_community(community_id, user_id, my_id, is_admin=False):
         community_id, user_id, invite_id)
 
     # push a new community event
-    producer.send('invites', {'id': invite_id, 'community_id': community_id,
-                              'invite_by_user_id': my_id, 'invite_to_user_id': user_id,
-                              'creation_date': community.creation_date.isoformat(),
-                              'action': 'invite'})
+    producer.send('invites', '{id},{community_id},{invite_by},{invite_to},{creation_date},{action}'.format(
+        id=invite_id, community_id=community_id, invite_by=my_id, invite_to=user_id,
+        creation_date=datetime.utcnow().isoformat(), action='new community'))
 
     return resp
 
@@ -143,10 +142,10 @@ def accept_invite_to_community(community_id, invite_id, my_id, is_admin=False):
         # add user to the community list
         community.add_user(my_id)
 
-        # push a new community event
-        producer.send('invites', {'id': invite_id, 'community_id': community_id,
-                                  'user_id': my_id, 'creation_date': invite.creation_date.isoformat(),
-                                  'action': 'accept'})
+        # push a new invite accept event
+        producer.send('invites', '{id},{community_id},{invite_by},{invite_to},{creation_date},{action}'.format(
+            id=invite_id, community_id=community_id, invite_by=my_id, invite_to='',
+            creation_date=invite.creation_date.isoformat(), action='invite accept'))
 
         resp = app.make_response(community.to_son())
         resp.headers['Location'] = '/api/v1/communities/{}'.format(community_id)
@@ -166,9 +165,9 @@ def decline_invite_to_community(community_id, invite_id, my_id, is_admin=False):
         invite.save()
 
         # push a new community event
-        producer.send('invites', {'id': invite_id, 'community_id': community_id,
-                                  'user_id': my_id, 'creation_date': invite.creation_date.isoformat(),
-                                  'action': 'decline'})
+        producer.send('invites', '{id},{community_id},{invite_by},{invite_to},{creation_date},{action}'.format(
+            id=invite_id, community_id=community_id, invite_by=my_id, invite_to='',
+            creation_date=invite.creation_date.isoformat(), action='invite decline'))
 
     return app.make_response({})
 
@@ -184,9 +183,9 @@ def subscribe_to_community(community_id, my_id, is_admin=False):
     community.add_user(my_id)
 
     # push a new community event
-    producer.send('subscribes', {'community_id': community_id,
-                                 'user_id': my_id, 'creation_date': datetime.utcnow().isoformat(),
-                                 'action': 'subscribe'})
+    producer.send('subscribes', '{id},{community_id},{subscribe_by},{creation_date},{action}'.format(
+        id=community_id, community_id=community_id, subscribe_by=my_id,
+        creation_date=datetime.utcnow().isoformat(), action='subscribe'))
 
     resp = app.make_response(community.to_son())
     resp.headers['Location'] = '/api/v1/communities/{}'.format(community_id)
@@ -204,9 +203,9 @@ def unsubscribe_to_community(community_id, my_id, is_admin=False):
     community.remove_user(my_id)
 
     # push a new community event
-    producer.send('subscribes', {'community_id': community_id,
-                                 'user_id': my_id, 'creation_date': datetime.utcnow().isoformat(),
-                                 'action': 'unsubscribe'})
+    producer.send('subscribes', '{id},{community_id},{subscribe_by},{creation_date},{action}'.format(
+        id=community_id, community_id=community_id, subscribe_by=my_id,
+        creation_date=datetime.utcnow().isoformat(), action='unsubscribe'))
 
     return app.make_response({})
 
@@ -253,8 +252,10 @@ def create_usergroup(community_id, my_id, is_admin=False):
     new_usergroup.save()
 
     # push a new community event
-    producer.send('usergroup', {'id': new_usergroup.id, 'name': new_usergroup.name, 'tags': new_usergroup.tags,
-                                'user_id': my_id, 'creation_date': new_usergroup.creation_date.isoformat()})
+    producer.send('usergroups', '{id},{name},{community_id},{tags},{created_by},{creation_date},{action}'.format(
+        id=new_usergroup.id, name=new_usergroup.name, community_id=community_id, created_by=new_usergroup.created_by,
+        creation_date=new_usergroup.creation_date.isoformat(), tags=' '.join(new_usergroup.tags),
+        action='new usergroup'))
 
     return app.make_response(new_usergroup.to_son())
 

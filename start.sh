@@ -64,6 +64,17 @@ run_elasticsearch() {
   fi
 }
 
+run_kibana() {
+  echo "starting kibana"
+  if ! docker ps -a | grep kibana; then
+    docker run --name kibana --rm -d \
+      --net $network \
+      -p 5601:5601 \
+      docker.io/library/kibana:7.14.0
+  fi
+}
+
+ 
  
 run_spark() {
   echo "starting spark cluster"
@@ -155,6 +166,7 @@ $0 component [component] ...
   sparkspeed
   sparkbatch
   elasticsearch
+  kibana
   backend
   frontend
   logs
@@ -169,6 +181,7 @@ case $# in
     run_mongo
     run_backend
     run_elasticsearch
+    run_kibana
     run_frontend
     tail_logs
     ;;

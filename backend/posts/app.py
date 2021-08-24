@@ -52,11 +52,9 @@ def create_new_post(community_id, my_id, is_admin=False):
     new_post.save()
 
     # notify kafka about new post
-    # producer.send('communities', {'id': new_post.id, 'content': new_post.content, 'community_id': community_id,
-    #                               'user_id': my_id, 'creation_date': new_post.creation_date.isoformat(),
-    #                               'action': 'new post'
-    #                               })
-    producer.send('posts', 'new post {}'.format(new_post.content))
+    producer.send('posts', '{id},{community_id},{usergroup_id},{created_by},{content},{creation_date},{action}'.format(
+        id=new_post.id, community_id=community_id, usergroup_id='', created_by=my_id, content=new_post.content,
+        creation_date=new_post.creation_date.isoformat(), action='new post'))
     return app.make_response(new_post.to_son())
 
 
@@ -76,9 +74,12 @@ def create_new_image_post(community_id, my_id, is_admin=False):
     if ext in allowed_ext:
         new_image_post.file = file_content
         new_image_post.save()
-        producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'community_id': community_id,
-                                 'user_id': my_id, 'creation_date': new_image_post.creation_date.isoformat(),
-                                 'action': 'new image'})
+        producer.send('images',
+                      '{id},{community_id},{usergroup_id},{created_by},{name},{creation_date},{action}'.format(
+                        id=new_image_post.id, community_id=community_id, usergroup_id='', created_by=my_id,
+                        name=new_image_post.name, creation_date=new_image_post.creation_date.isoformat(),
+                        action='new image')
+                      )
 
         return app.make_response(json.dumps(
             {'_id': new_image_post.id, 'name': new_image_post.name}))
@@ -102,9 +103,9 @@ def create_new_video_post(community_id, my_id, is_admin=False):
     if ext in allowed_ext:
         new_video_post.file = file_content
         new_video_post.save()
-        producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'community_id': community_id,
-                                 'user_id': my_id, 'creation_date': new_video_post.creation_date.isoformat(),
-                                 'action': 'new video'})
+        producer.send('videos', '{id},{community_id},{usergroup_id},{user_id},{name},{creation_date},{action}'.format(
+            id=new_video_post.id, community_id=community_id, usergroup_id='', user_id=my_id, name=new_video_post.name,
+            creation_date=new_video_post.creation_date.isoformat(), action='new video'))
 
         return app.make_response(json.dumps(
             {'_id': new_video_post.id, 'name': new_video_post.name}))
@@ -185,10 +186,9 @@ def create_new_usergroup_post(usergroup_id, my_id, is_admin=False):
     new_post = TextPost(created_by=my_id, content=content, usergroup_id=usergroup_id)
     new_post.save()
 
-    producer.send('posts', {'id': new_post.id, 'name': new_post.name, 'usergroup_id': usergroup_id,
-                            'user_id': my_id, 'creation_date': new_post.creation_date.isoformat(),
-                            'action': 'new message'
-                            })
+    producer.send('posts', '{id},{community_id},{usergroup_id},{created_by},{content},{creation_date},{action}'.format(
+        id=new_post.id, community_id='', usergroup_id=usergroup_id, created_by=my_id, content=new_post.content,
+        creation_date=new_post.creation_date.isoformat(), action='new message'))
 
     return app.make_response(new_post.to_son())
 
@@ -209,10 +209,12 @@ def create_new_usergroup_image_post(usergroup_id, my_id, is_admin=False):
         new_image_post.file = File(file)
         new_image_post.save()
 
-        producer.send('images', {'id': new_image_post.id, 'name': new_image_post.name, 'usergroup_id': usergroup_id,
-                                 'user_id': my_id, 'creation_date': new_image_post.creation_date.isoformat(),
-                                 'action': 'new image'
-                                 })
+        producer.send('images',
+                      '{id},{community_id},{usergroup_id},{created_by},{name},{creation_date},{action}'.format(
+                          id=new_image_post.id, community_id='', usergroup_id=usergroup_id, created_by=my_id,
+                          name=new_image_post.name, creation_date=new_image_post.creation_date.isoformat(),
+                          action='new image')
+                      )
 
         return app.make_response(new_image_post.to_son())
     else:
@@ -237,10 +239,9 @@ def create_new_usergroup_video_post(usergroup_id, my_id, is_admin=False):
         new_video_post.file = File(file)
         new_video_post.save()
 
-        producer.send('videos', {'id': new_video_post.id, 'name': new_video_post.name, 'usergroup_id': usergroup_id,
-                                 'user_id': my_id, 'creation_date': new_video_post.creation_date.isoformat(),
-                                 'action': 'new video'
-                                 })
+        producer.send('videos', '{id},{community_id},{usergroup_id},{user_id},{name},{creation_date},{action}'.format(
+            id=new_video_post.id, community_id='', usergroup_id=usergroup_id, user_id=my_id, name=new_video_post.name,
+            creation_date=new_video_post.creation_date.isoformat(), action='new video'))
 
         return app.make_response(new_video_post.to_son())
     else:
