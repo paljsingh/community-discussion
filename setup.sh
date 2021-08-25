@@ -44,7 +44,7 @@ curl https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/2.4.1/kafka-c
 curl https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.6.2/commons-pool2-2.6.2.jar --output var/jars/commons-pool2-2.6.2.jar
 
 # for elasticsearch
-icurl https://repo1.maven.org/maven2/org/elasticsearch/elasticsearch-spark-20_2.12/7.14.0/elasticsearch-spark-20_2.12-7.14.0.jar --output var/jars/elasticsearch-spark-20_2.12-7.14.0.jar
+curl https://repo1.maven.org/maven2/org/elasticsearch/elasticsearch-spark-20_2.12/7.14.0/elasticsearch-spark-20_2.12-7.14.0.jar --output var/jars/elasticsearch-spark-20_2.12-7.14.0.jar
 
-# spark warehouse
-mkdir spark-warehouse
+clear
+echo "SETUP COMPLETE"

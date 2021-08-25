@@ -28,7 +28,7 @@ run_kafka() {
   fi
 
   echo "creating kafka topics"
-  sleep 5
+  sleep 10
   python3 scripts/kafka-topics.py create
 }
 
@@ -142,7 +142,9 @@ run_sparkbatch() {
 
 run_sparkspeed() {
   for topic in $(echo $topics); do
+    echo "starting consumer for topic $topic"
     python3 scripts/spark-speed.py $topic &
+    sleep 1
   done
 }
 

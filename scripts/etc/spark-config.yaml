@@ -1,11 +1,11 @@
 speed:
-  batch_interval: 1
+  batch_interval: 5
   name: 'speed'
   checkpoint_dir: 'var/data/spark/speed'
   log_dir: 'var/data/spark/speed/logs'
 
 batch:
-  batch_interval: 30
+  batch_interval: 60
   name: 'batch'
   checkpoint_dir: 'var/data/spark/batch'
   log_dir: 'var/data/spark/batch/logs'
@@ -32,17 +32,17 @@ topics:
     - id
     - name
     - created_by
-    - tags
     - creation_date
+    - tags
     - action
   usergroups:
     fields:
     - id
     - name
     - community_id
-    - tags
     - created_by
     - creation_date
+    - tags
     - action
   posts:
     fields:

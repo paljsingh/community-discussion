@@ -16,6 +16,7 @@ Running this script will:
 - delete "$PWD/venv/" folder containing python dependencies for c18n.
 - delete all "c18n.log" log files found under $PWD/
 - delete kafka/zookeeper/mongo/elasticsearch/kibana/spark docker images.
+- delete docker network 'c18n-network'
 
 YOU HAVE BEEN WARNED!
 
@@ -37,4 +38,5 @@ if [ "$x" = "yes" ]; then
     bitnami/spark:latest \
     docker.elastic.co/elasticsearch/elasticsearch:7.14.0 \
     kibana:7.14.0 
+    docker network rm c18n-network
 fi

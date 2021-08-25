@@ -58,9 +58,9 @@ def create_new_community(my_id, is_admin=False):
     new_community.save()
 
     # push a new community event
-    producer.send('communities', '{id},{name},{created_by},{tags},{creation_date},{action}'.format(
+    producer.send('communities', '{id},{name},{created_by},{creation_date},{tags},{action}'.format(
         id=new_community.id, name=new_community.name, created_by=new_community.created_by,
-        creation_date=new_community.creation_date.isoformat(), tags=' '.join(new_community.tags),
+        creation_date=new_community.creation_date.isoformat(), tags=str(new_community.tags).replace(',', ' '),
         action='new community'))
 
     return app.make_response(new_community.to_son())
@@ -252,9 +252,9 @@ def create_usergroup(community_id, my_id, is_admin=False):
     new_usergroup.save()
 
     # push a new community event
-    producer.send('usergroups', '{id},{name},{community_id},{tags},{created_by},{creation_date},{action}'.format(
+    producer.send('usergroups', '{id},{name},{community_id},{created_by},{creation_date},{tags},{action}'.format(
         id=new_usergroup.id, name=new_usergroup.name, community_id=community_id, created_by=new_usergroup.created_by,
-        creation_date=new_usergroup.creation_date.isoformat(), tags=' '.join(new_usergroup.tags),
+        creation_date=new_usergroup.creation_date.isoformat(), tags=str(new_usergroup.tags).replace(',', ' '),
         action='new usergroup'))
 
     return app.make_response(new_usergroup.to_son())

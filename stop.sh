@@ -59,6 +59,8 @@ stop_logs() {
 stop_sparkspeed() {
   printf "%-40s" "stopping spark speed processes ... " && \
     _kill_with_exit_status 'spark-speed.py'
+  printf "%-40s" "stopping spark-shell ... " && \
+    _kill_with_exit_status 'spark-shell'
 }
 
 stop_sparkbatch() {

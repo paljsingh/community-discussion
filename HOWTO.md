@@ -2,157 +2,189 @@
 
 > python 3.9+  
 > node v15.x  
-> yarn v1.22.x
-  docker-desktop 3.5+
+> yarn v1.22.x  
+> docker-desktop 3.5+  
 
-For older versions of python (3.7, 3.8), you may need to use an older version of pyspark (v2.4.8)
-Also, the pyspark consumer module may also need equivalent changes.
-
-## Clone Repo
-
-> $ git clone https://github.com/paljsingh/community-discussion.git  
-> $ cd community-discussion
-
-## Install / Run
+> About 10GB of free disk space.
 
 Tested on OSX 11.5.2 with  
 > python v3.9.2  
 > node v15.11.0  
 > yarn v1.22.5  
-  docker-desktop 3.5.2
+> docker-desktop 3.6.0  
 
----
 
-Installation
+For older versions of python (v3.7, v3.8), you may need to use an older version of pyspark (v2.4.8).  
+The pyspark consumer module may also need equivalent changes.
 
-$ ./setup.sh
 
-This will -
-    - pull the docker images for 
-      - zookeeper
-      - kafka
-      - mongo db
-      - spark
-      - elasticsearch
-      - kibana
+## Clone Repo
 
-    also, 
-    - install python dependencies for the backend services
-    - install node / vue.js dependencies for the frontend service.
-    - set up data, config and log directories for the applications.
-    - download additional jars for spark/kafka and spark/elasticsearch integration.
+> $ git clone https://github.com/paljsingh/community-discussion.git  
+> $ cd community-discussion  
 
----
 
-Run
+## Setup
 
-$ ./start.sh
+> $ ./setup.sh  
 
-This will - 
+This will pull the docker images for  
+- zookeeper  
+- kafka  
+- mongo db  
+- spark  
+- elasticsearch  
+- kibana  
 
-    - Create a docker network
-    - Run zookeeper
-    - Run Kafka
-      - create kafka topics
-    - Run mongo db
-      - create indexes for mongo collections for text based search.
-    - Run spark (master and worker nodes)
-    - Run elasticsearch service
-    - Run kibana server
-    - Run flask server for each of the backend services
-    - Run flask/websocket application
-    - Run frontend vue.js server
-    - Tail the logs for all the components
+also,  
+- install python dependencies for the backend services.  
+- install node / vue.js dependencies for the frontend service.  
+- set up data, config and log directories for the applications.  
+- download additional jars for spark/kafka and spark/elasticsearch integration.  
+
+
+## Run
+
+> $ ./start.sh
+
+This will -  
+
+- Create a docker network  
+- Run zookeeper  
+- Run Kafka
+  - create kafka topics.
+- Run mongo db
+  - create indexes for mongo collections. 
+- Run spark (master and worker nodes)  
+- Run elasticsearch service  
+- Run kibana server  
+- Run flask server for each of the backend services  
+- Run flask/websocket application  
+- Tail the logs for all the components  
+- Run frontend vue.js server  
 
 One can also start a single component as:
 
-./start.sh [kafka|mongo|spark|elasticsearch|kibana|backend|frontend]
+> ./start.sh [kafka|mongo|spark|elasticsearch|kibana|backend|frontend]
 
----
 
-Producers and Consumers
+## Producers and Consumers
 
 Kafka producers are embedded in the backend server apis, and will generate events upon receiving requests on http REST / websocket
 endpoints. No additional step is required for the kafka producers.
 
-For Kafka consumers - Run the following command in a separate terminal session(s) - 
+For Kafka consumers - Run the following commands in a separate terminal session(s) - 
 
-$ ./start sparkspeed
-$ ./start sparkbatch    # not yet implemented in PoC
+> $ ./start.sh sparkspeed  
+> $ ./start.sh sparkbatch    # not yet implemented in PoC. 
 
-The above will create one process per kafka topic, consume the streamed events and process/transform and save them to elasticsearch.
+The above will create one process per kafka topic, consume the streamed event, process/transform and save them to elasticsearch.
 
----
 
-UI
+## UI
 
 Visit <http://localhost:8080>
 
 Login as admin by using the okta login link.
-To obtain admin token, Go to Profile link -> Admin JWT Token
-or
-copy it from Developer Tools -> Application -> Local Storage -> http://localhost:8080/ -> okta-token-storage -> accessToken -> accessToken
+To obtain admin token, Go to  
+**Profile link -> Admin JWT Token**  [TBD]  
+or  
+Copy it from  
+**Developer Tools -> Application -> Local Storage -> http://localhost:8080/ -> okta-token-storage -> accessToken -> accessToken**
 
-Admin users can copy the JWT tokens of other users by visiting the users tab, and clicking on the 'Copy Token' button for one of the users.
+Admin users can copy the JWT tokens of other users by visiting the users tab, and clicking on the **Copy Token** button for one of the users.
 
 Another incognito windows (or a new firefox/chrome profile) can be used to impersonate / login as a non-admin user, by pasting their JWT token on the login page.
 
 Users can view other users, view/create communities, create usergroups or chat with other users.
 
 
-Caveat:
-    - All the incognito windows in Firefox/Chrome share the user cookies/tokens, so it is not possible to open multiple incognito windows to impersonate multiple users.
-    One can however, 
-      - Create a new chrome/firefox profile and impersonate 2 new users (1 with incognito window, 1 with non-incognito window of the new profile)
-      - Use another browser
+#### Caveat:
+- All the incognito windows in Firefox/Chrome share the user cookies/tokens, so it is not possible to open multiple incognito windows to impersonate multiple users.  
 
----
+One can however,   
 
-Generate random requests to create users, communities, posts etc.
+- Create a new chrome/firefox profile and impersonate 2 new users (1 with incognito window, 1 with non-incognito window of the new profile)
+- Use another browser
 
-$ source venv/bin/activate
-$ export ADMIN_TOKEN='jwt-token-of-the-admin-user'
 
-$ python3 scripts/chaos.py
+## Content Generation
+
+In a new terminal session - 
+> $ source venv/bin/activate  
+> $ export ADMIN_TOKEN='jwt-token-of-the-admin-user'  
+>
+> $ python3 scripts/chaos.py  
+
 or
-$ python3 scripts/chaos.py 1000
+ > $ python3 scripts/chaos.py 1000
 
-The script above creates a total of given number of resources (100 if no arguments specified). The resources are
+The script above creates a total of given number of resources  
+(100 if no arguments specified).  
 
-users
-communities
-usergroups
-text posts
-image posts
-video posts
+The resources are
 
-The distribution of number of resources of each type are controlled by the configs defined in scripts/etc/chaos.yaml
+- users
+- communities
+- usergroups
+- text posts
+- image posts
+- video posts
 
-For creating the users, admin jwt token is used.
-All the other requests use a random non-admin user's JWT token to simulate cases like:
+The distribution of number of resources of each type are controlled by the configs defined in **scripts/etc/chaos.yaml**
+
+For creating new users, admin jwt token is used.
+All the other resource creation requests use a random non-admin user's JWT token to simulate cases like:
 
 - users creating a community
 - users creating user groups and adding other users to it.
-- users posting text / image / video content to the communities
+- users posting text / image / video content to the communities.
 
----
-Status
 
-$ ./status.sh 
+Once the fake content is generated, you should be able to see it on the UI.
+
+Login via another non-admin/dummy user by copy/pasting it's JWT token in login page, and create new communities / post content in a community, or initiate a chat with another user. [TBD]
+
+
+## Analytics Dashboard
+
+Pre-saved index-patterns and dashboards are available under  
+**data/kibana/** folder, that can be imported to the newly launched
+kibana service.
+
+> $ ./import-kibana.sh
+
+Visit:  <http://localhost:5601> 
+
+Under 
+**Home -> dashboard**, it should list 2 dashboards, showing the statistics about the users, communities, usergroups,
+posts, images and videos.
+
+
+## Status
+
+Status of the currently running services / components can be seen with:
+
+> $ ./status.sh  
+
 or
-./status.sh [mongo|kafka|spark|backend|frontend]
 
----
+> ./status.sh [mongo|kafka|spark|backend|frontend|elasticsearch|kibana]
 
-Stop services
 
-$ ./stop.sh 
+## Stop services
+
+> $ ./stop.sh 
+
 or
-./stop.sh [mongo|kafka|spark|backend|frontend]
+
+> ./stop.sh [mongo|kafka|spark|backend|frontend|elasticsearch|kibana]
+
+
+## Cleanup
+
+A cleanup script is provided to remove all application data, depdencies, docker images and logs, and restore the app to a pristine state.
+
+> $ ./cleanup.sh
 
 ---
-
-Analytics dashboard
-
-Visit http://localhost:5601
-
