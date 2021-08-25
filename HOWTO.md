@@ -1,9 +1,12 @@
 ## Pre-requisites
 
-> python 3.7+  
+> python 3.9+  
 > node v15.x  
 > yarn v1.22.x
   docker-desktop 3.5+
+
+For older versions of python (3.7, 3.8), you may need to use an older version of pyspark (v2.4.8)
+Also, the pyspark consumer module may also need equivalent changes.
 
 ## Clone Repo
 
@@ -26,11 +29,12 @@ $ ./setup.sh
 
 This will -
     - pull the docker images for 
-      - kafka
       - zookeeper
+      - kafka
       - mongo db
       - spark
       - elasticsearch
+      - kibana
 
     also, 
     - install python dependencies for the backend services
@@ -53,7 +57,8 @@ This will -
     - Run mongo db
       - create indexes for mongo collections for text based search.
     - Run spark (master and worker nodes)
-    - Run elasticsearch
+    - Run elasticsearch service
+    - Run kibana server
     - Run flask server for each of the backend services
     - Run flask/websocket application
     - Run frontend vue.js server
@@ -61,7 +66,21 @@ This will -
 
 One can also start a single component as:
 
-./start.sh [kafka|mongo|spark|backend|frontend]
+./start.sh [kafka|mongo|spark|elasticsearch|kibana|backend|frontend]
+
+---
+
+Producers and Consumers
+
+Kafka producers are embedded in the backend server apis, and will generate events upon receiving requests on http REST / websocket
+endpoints. No additional step is required for the kafka producers.
+
+For Kafka consumers - Run the following command in a separate terminal session(s) - 
+
+$ ./start sparkspeed
+$ ./start sparkbatch    # not yet implemented in PoC
+
+The above will create one process per kafka topic, consume the streamed events and process/transform and save them to elasticsearch.
 
 ---
 
@@ -89,23 +108,17 @@ Caveat:
 
 ---
 
-Spark Speed / Batch processing
-
-In another terminal, run
-python3 ./start.sh sparkspeed
-python3 ./start.sh sparkbatch
-
-These will launch the spark speed and batch job, which display the incoming flow of events on console as well as dumps it to elasticsearch.
-
----
 Generate random requests to create users, communities, posts etc.
 
-export ADMIN_TOKEN='jwt-token-of-the-admin-user'
-python3 scripts/chaos.py
-or
-python3 scripts/chaos.py 1000
+$ source venv/bin/activate
+$ export ADMIN_TOKEN='jwt-token-of-the-admin-user'
 
-The script above creates a total of given number of resources (100 if no arguments specified). The resources can be one of - 
+$ python3 scripts/chaos.py
+or
+$ python3 scripts/chaos.py 1000
+
+The script above creates a total of given number of resources (100 if no arguments specified). The resources are
+
 users
 communities
 usergroups
@@ -139,4 +152,7 @@ or
 
 ---
 
+Analytics dashboard
+
+Visit http://localhost:5601
 

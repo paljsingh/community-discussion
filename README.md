@@ -39,32 +39,42 @@ dummy users (generated for demonstration purposes) is also stored in mongo db.
 The data stored in mongo db is immutable, any updates to the data is saved a new timestamped records. This persistence serves the data
 for batch layer.
 
-S3 / hdfs 
+S3 / hdfs / GridFS (planned)
 
 Media files attached with the posts / messages are saved on a distributed storage layer.
+For the PoC, all the image and video files are < 16MB in size, that can be saved as a FileField in the mongo db itself.
+
 
 Spark streaming
 
 Spark streaming serves for the speed layer of the lambda architecture. It generates the real time view and also pushes the 
 processed event data to redis cache.
 
+
 Apache Spark
 
 Apache Spark is used to process batch data and generate batch views.
+For the PoC, the batch layer is not yet implemented in absence of any heavy analytical processing.
 
-Elastic Search
+The overall architecture resembles more to the kappa architecture, with speed layer processing event in mini-batches at 1 second intervals.
 
-Elastic search is configured to work with mongo db. It combines the real time and the batch views.
+Elastic Search / Kibana
 
-Redis
+The spark streaming layer processes the events, and transforms / dumps the data to elastic search.
+Along with kibana dashboard, it is used as a dashboard to serve the analytics platform.
+
+Redis (planned)
 
 A cache server stores a subset of the incoming events (user auth / post / message content) and provides quicker access to the
 recently generaed content.
+Not implmented in PoC.
 
-Graph db
+Graph db (to be explored)
 
 For user interaction workflows, user connections it may be worth to introduce a graph db.
 
-The analytics module makes use of the indexed views provided by elastic search.
-A python/flask server exposes api for analytics queries, which is presented in the browser via Vue components.
+Analytics dashboard (kibana)
+For the PoC, kibana is used to work on elasticsearch indexes, and provides a high level view of various events.
+Users of the analytics dashboard can see the various events and associated data.
+For the PoC, the analytics dashboard does not have any authentication in place, this can be implemented if time permits.
 

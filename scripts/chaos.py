@@ -12,6 +12,10 @@ from envyaml import EnvYAML
 
 
 class Chaos:
+    """
+    Named after the chaos-monkey,
+    howver, this script will only try to create resources, randomly.
+    """
 
     def __init__(self, admin_token, total, **endpoints):
         self.total = total

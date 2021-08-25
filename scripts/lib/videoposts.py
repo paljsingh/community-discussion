@@ -14,15 +14,17 @@ class VideoPostCreator:
         self.token = token
 
     def create(self):
-        f = Faker()
-        start = random.randint(0, 25)   # demo video clip is 30 seconds long
+        # create random clips from the sample video available under var/data/
+        start = random.randint(0, 120)   # video clip is 125 seconds long
         end = start + random.randint(1, 5)
-        video = VideoFileClip("earth.mp4").subclip(start, end)
+        filepath = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "./big-buck-bunny.mp4")
+        video = VideoFileClip(filepath).subclip(start, end)
 
+        f = Faker()
         name = '{}.mp4'.format(str.lower(f.word()))
         path = 'var/data/videos/{}'.format(name)
 
-        video.write_videofile(path, fps=25)
+        video.write_videofile(path, fps=15)
 
         with open(path, 'rb') as fh:
             files = {

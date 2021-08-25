@@ -1,6 +1,6 @@
 #!/bin/bash
 
-network="kafka-network"
+network="c18n-network"
 run_kafka() {
   echo "creating docker network"
   if ! docker network inspect $network &>/dev/null; then
@@ -74,8 +74,6 @@ run_kibana() {
   fi
 }
 
- 
- 
 run_spark() {
   echo "starting spark cluster"
   if ! docker ps -a | grep spark; then

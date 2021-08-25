@@ -1,13 +1,40 @@
 #!/bin/bash
+#!/bin/bash
 
-cat <<EOF | mongo c18n &>/dev/null
-db.user.drop()
-db.community.drop()
-db.usergroup.drop()
-db.invite.drop()
-db.post.drop()
-db.image.drop()
-db.video.drop()
+cat << EOF
+WARNING WARNING WARNING
+
+Running this script will: 
+- delete "$PWD/var/" folder containing all docker configurations/data related to
+  kafka
+  zookeeper
+  mongo
+  spark
+  elsticsearch
+  kibana
+- delete "$PWD/frontend/node_modules" folder containing node.js packages for c18n
+- delete "$PWD/venv/" folder containing python dependencies for c18n.
+- delete all "c18n.log" log files found under $PWD/
+- delete kafka/zookeeper/mongo/elasticsearch/kibana/spark docker images.
+
+YOU HAVE BEEN WARNED!
+
+Type "yes" to continue -
 EOF
 
-rm -rf var/data/mongo/* var/data/images/* var/data/videos/* var/data/kafka/* var/data/spark/*
+read x 
+if [ "$x" = "yes" ]; then
+  rm -rf "$PWD/var/"
+  rm -rf "$PWD/frontend/node_modules"
+  rm -rf "$PWD/venv"
+  find "$PWD" -type f -name "c18n.log" | xargs rm
+
+  docker stop mongo zookeeper kafka spark elaasticsearch kibana
+  docker rmi \
+    bitnami/zookeeper:latest \
+    bitnami/kafka:latest \
+    xemuliam/mongo:latest \
+    bitnami/spark:latest \
+    docker.elastic.co/elasticsearch/elasticsearch:7.14.0 \
+    kibana:7.14.0 
+fi
