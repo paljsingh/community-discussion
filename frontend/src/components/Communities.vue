@@ -1,45 +1,52 @@
 <template>
     <v-col class="content">
-        <v-card dark>
-            <v-card-title dark>
-                <v-text-field
-                    v-model="search"
-                    append-icon="mdi-magnify"
-                    label="Search"
-                    single-line
-                    hide-details
+        <div class="col1">
+            <v-card dark>
+                <v-card-title dark>
+                    <v-text-field
+                        v-model="search"
+                        append-icon="mdi-magnify"
+                        label="Search"
+                        single-line
+                        hide-details
+                        v-on:change="this.fetchData"
+                        dark
+                    ></v-text-field>
+                </v-card-title>
+                <v-data-table
+                    :items="items"
+                    :headers="headers"
+                    :options.sync="options"
+
+                    item-key="name"
+                    v-model="selected"
+                    @click:row="handleClick"
+                    
+                    :footer-props="{
+                        'items-per-page-text':'',
+                        'items-per-page-options': []
+                    }"
+                    @update:pagination="handlePageChange"
+                    :server-items-length="total"
+
+                    class="elevation-1"
+                    loading
+                    loading-text="Loading... Please wait"
+                    dense
                     dark
-                ></v-text-field>
-            </v-card-title>
-            <v-data-table
-                :items="items"
-                :headers="headers"
-                :options.sync="options"
-
-                item-key="name"
-                v-model="selected"
-                @click:row="handleClick"
-                
-                :footer-props="{
-                    'items-per-page-text':'',
-                    'items-per-page-options': []
-                }"
-                @update:pagination="handlePageChange"
-                :server-items-length="total"
-
-                class="elevation-1"
-                loading
-                loading-text="Loading... Please wait"
-                dense
-                dark
-            >
-            </v-data-table>
-        </v-card>
+                >
+                </v-data-table>
+            </v-card>
+        </div>
+        <div class="col2">
+            <Posts :community="this.selected" v-if="this.selected.length > 0" />
+        </div>
     </v-col>
 </template>
 
 <script>
-    import axios from '../helpers/interceptor';
+    import axiosInstance from '../helpers/interceptor';
+    import Posts from './Posts.vue';
 
     export default {
         name: 'Communities',
@@ -49,18 +56,14 @@
                     this.fetchData();
                 },
                 deep: true
-            },
-            search: {
-                handler() {
-                    this.fetchData();
-                }
             }
         },
+        components: {Posts},
         data: function() {
             return {
                 items: [],
                 selected: [],
-                singleSelect: false,
+                singleSelect: true,
 
                 headers: [
                     {
@@ -83,20 +86,18 @@
         methods: {
             async fetchData () {
                 let params = Object.assign({}, this.options, {'name': this.search});
-                let response = (await axios.get(this.apiUrl, {params: params})).data;
+                let response = (await axiosInstance.get(this.apiUrl, {params: params})).data;
                 this.items = response.data;
 
-                console.log(this.items)
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
             },
             handlePageChange(value) {
                 this.page = value;
             },
-            handleClick(selected) {
-                this.selected = [selected];
+            handleClick(selectedCommunity) {
+                this.selected = [selectedCommunity];
             },
-
         }
     };
 
@@ -105,7 +106,19 @@
 <style scoped>
 .content {
     position: relative;
-    width: 500px;
+    left: 10px;
+    height: 500px;
+}
+.col1 {
+    position: relative;
+    width: 20%;
+    float: left;
+    left: 10px;
+}
+.col2 {
+    position: relative;
+    float: right;
+    width: 75%;
     left: 10px;
 }
 </style>

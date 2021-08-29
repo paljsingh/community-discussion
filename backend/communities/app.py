@@ -6,11 +6,9 @@ from pymodm.fields import CharField, DateTimeField, ListField
 from pymongo.write_concern import WriteConcern
 
 from http import HTTPStatus
-from random import Random
 
 import uuid
 import logging.config
-from faker import Faker
 from datetime import datetime
 from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
@@ -19,9 +17,10 @@ from flask import request
 
 from common.db import Db
 from common.utils import FlaskUtils
-from usergroups.app import Usergroup
 from kafka import KafkaProducer
 import atexit
+
+from users.app import User
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
@@ -45,7 +44,6 @@ def create_new_community(my_id, is_admin=False):
 
     data = request.get_json()
     new_community = Community(created_by=my_id)
-    new_community.fake_info()
 
     # override with any data available in the post body.
     if data and data.get('name'):
@@ -239,7 +237,6 @@ def create_usergroup(community_id, my_id, is_admin=False):
     """
     data = request.get_json()
     new_usergroup = Usergroup(created_by=my_id)
-    new_usergroup.fake_info()
 
     # override with any data available in the post body.
     if data and data.get('name'):
@@ -293,6 +290,108 @@ def get_usergroups_for_community(community_id, my_id, is_admin=False):
 # api to update community info.
 # api for invite status check.
 
+@app.route("/api/v1/usergroups/new", methods=['POST'])
+@CustomJWTVerifier.verify_jwt_token
+def create_temp_usergroup(my_id, is_admin=False):
+    """
+    a temporary user group, not associated with a community.
+    This will be used for a user-user direct chat.
+    :param my_id:
+    :param is_admin:
+    :return:
+    """
+
+    data = request.get_json()
+    other_user_id = data.get('user_id')
+
+    if not other_user_id:
+        abort(HTTPStatus.PRECONDITION_FAILED)
+
+    user_ids = [my_id, other_user_id]
+    # check is a usergroup exists already for these 2 users
+    usergroups = db.retrieve(
+        Usergroup, filters={'users': {'$all': user_ids}}, to_son=False, pagination=False
+    )
+
+    if not usergroups:
+
+        new_usergroup = Usergroup(created_by=my_id)
+        # override with any data available in the post body.
+        if data and data.get('name'):
+            new_usergroup.name = data['name']
+        if data and data.get('tags'):
+            new_usergroup.tags = data['tags']
+        if user_ids:
+            new_usergroup.users = user_ids
+        new_usergroup.save()
+        usergroup = new_usergroup
+
+        # push a new usergroup event
+        producer.send('usergroups', '{id},{name},{community_id},{created_by},{creation_date},{tags},{action}'.format(
+            id=usergroup.id, community_id='', usergroup_id=usergroup.id, created_by=my_id, name=new_usergroup.name,
+            creation_date=datetime.utcnow().isoformat(), action='new usergroup', tags=str(new_usergroup.tags).replace(',', ' ')))
+
+    else:
+        usergroup = usergroups[0]
+
+    users = db.retrieve(User, filters={'_id': {'$in': user_ids}}, select_columns=['_id', 'name'],
+                        pagination=False, to_son=True)
+
+    usergroup.users = users
+    return app.make_response(usergroup.to_son())
+
+
+@app.route("/api/v1/usergroups/mine", methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_my_usergroups(my_id, is_admin=False):
+    """
+    Return the user groups the requesting user is subscribed to.
+    TODO: Create another map for a user -> usergroup list, and query that instead.
+    as searching for user in usergroups list is likely to be slow.
+    """
+    return app.make_response(db.retrieve(Usergroup, filters={'users': {'$in': [my_id]}}))
+
+
+@app.route("/api/v1/usergroups", methods=['GET'])
+@CustomJWTVerifier.verify_jwt_token
+def get_usergroups(my_id, is_admin=False):
+    """
+    Retrieve all usergroups (paginated)
+    :param my_id:
+    :param is_admin:
+    :return:
+    """
+    name, = FlaskUtils.get_url_args('name')
+    # search for given str in indexed text-fields.
+    filters = {}
+    if name:
+        filters = {
+            '$text': {
+                '$search': name,
+                '$caseSensitive': False,
+                '$diacriticSensitive': False,   # treat é, ê the same as e
+            }}
+
+    return app.make_response(db.retrieve(Usergroup, filters=filters))
+
+
+# TODO
+# api to update user group info
+
+
+class Usergroup(MongoModel):
+    id = CharField(required=True, primary_key=True, default=uuid.uuid4)
+    name = CharField(required=True)
+    users = ListField(required=False, blank=True)
+    creation_date = DateTimeField(required=True, default=datetime.utcnow)
+    created_by = CharField(required=True)
+    tags = ListField(required=False, blank=True)
+    # messages = ListField(required=False, blank=True)
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'my-app'
+
 
 class Community(MongoModel):
     id = CharField(required=True, primary_key=True, default=uuid.uuid4)
@@ -302,11 +401,6 @@ class Community(MongoModel):
     tags = ListField(required=False, blank=True)
     users = ListField(required=False, blank=True)
     usergroups = ListField(required=False, blank=True)
-
-    def fake_info(self):
-        f = Faker()
-        self.name = ' '.join([str.capitalize(f.word()) for i in range(2)])
-        self.tags = list([f.word() for i in range(Random().randint(1, 5))])
 
     def add_user(self, user_id):
         # add user to the community list

@@ -12,18 +12,18 @@ class Db:
 
     def retrieve(self, collection, filters: Dict = None, select_columns: List = None, to_son=True, pagination=True):    # noqa
         (skip, limit) = FlaskUtils.get_skip_limit()
-        (page, per_page) = FlaskUtils.get_url_args('page', 'perPage')
+        (page, per_page) = FlaskUtils.get_url_args('page', 'itemsPerPage')
 
-        query = collection.objects
+        query_set = collection.objects
         if select_columns:
-            query = query.only(*select_columns)
+            query_set = query_set.only(*select_columns)
 
         if filters:
-            query = query.raw(filters)
-            skip = 0
+            query_set = query_set.raw(filters)
+            # skip = 0
 
-        items = [x.to_son() if to_son else x for x in query.skip(skip).limit(limit)]
-        total_items = collection.objects.count()
+        items = [x.to_son() if to_son else x for x in query_set.skip(skip).limit(limit)]
+        total_items = query_set.count()
 
         if pagination:
             return {

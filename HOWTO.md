@@ -5,13 +5,14 @@
 > yarn v1.22.x  
 > docker-desktop 3.5+  
 
-> About 10GB of free disk space.
+> About 10GB of free disk space.  
+> Recommended 4 core, 8+ GB RAM for docker.  
 
 Tested on OSX 11.5.2 with  
 > python v3.9.2  
 > node v15.11.0  
 > yarn v1.22.5  
-> docker-desktop 3.6.0  
+> docker-desktop v3.5.2, v3.6.0  
 
 
 For older versions of python (v3.7, v3.8), you may need to use an older version of pyspark (v2.4.8).  
@@ -20,15 +21,24 @@ The pyspark consumer module may also need equivalent changes.
 
 ## Clone Repo
 
-> $ git clone https://github.com/paljsingh/community-discussion.git  
-> $ cd community-discussion  
-
+```
+$ git clone https://github.com/paljsingh/community-discussion.git  
+```
+```
+$ cd community-discussion  
+```
 
 ## Setup
 
-> $ ./setup.sh  
+```
+$ ./setup.sh  
+```
+
+**ATTENTION:** The docker images may take about 4GB of download and 20+ minutes to setup.
+
 
 This will pull the docker images for  
+
 - zookeeper  
 - kafka  
 - mongo db  
@@ -37,6 +47,7 @@ This will pull the docker images for
 - kibana  
 
 also,  
+
 - install python dependencies for the backend services.  
 - install node / vue.js dependencies for the frontend service.  
 - set up data, config and log directories for the applications.  
@@ -45,7 +56,9 @@ also,
 
 ## Run
 
-> $ ./start.sh
+```
+$ ./start.sh
+```
 
 This will -  
 
@@ -64,9 +77,9 @@ This will -
 - Run frontend vue.js server  
 
 One can also start a single component as:
-
-> ./start.sh [kafka|mongo|spark|elasticsearch|kibana|backend|frontend]
-
+```
+./start.sh [kafka|mongo|spark|elasticsearch|kibana|backend|frontend]
+```
 
 ## Producers and Consumers
 
@@ -74,9 +87,12 @@ Kafka producers are embedded in the backend server apis, and will generate event
 endpoints. No additional step is required for the kafka producers.
 
 For Kafka consumers - Run the following commands in a separate terminal session(s) - 
-
-> $ ./start.sh sparkspeed  
-> $ ./start.sh sparkbatch    # not yet implemented in PoC. 
+```
+$ ./start.sh sparkspeed  
+```  
+```
+$ ./start.sh sparkbatch    # not yet implemented in PoC. 
+```
 
 The above will create one process per kafka topic, consume the streamed event, process/transform and save them to elasticsearch.
 
@@ -100,24 +116,32 @@ Users can view other users, view/create communities, create usergroups or chat w
 
 
 #### Caveat:
-- All the incognito windows in Firefox/Chrome share the user cookies/tokens, so it is not possible to open multiple incognito windows to impersonate multiple users.  
+- All the incognito windows in Chrome (or firefox) share the user cookies/tokens, so it is not possible to open multiple incognito windows and impersonate multiple users.  
 
-One can however,   
+However, one can  
 
 - Create a new chrome/firefox profile and impersonate 2 new users (1 with incognito window, 1 with non-incognito window of the new profile)
-- Use another browser
+- Use a second browser.
 
 
 ## Content Generation
 
 In a new terminal session - 
-> $ source venv/bin/activate  
-> $ export ADMIN_TOKEN='jwt-token-of-the-admin-user'  
->
-> $ python3 scripts/chaos.py  
 
-or
- > $ python3 scripts/chaos.py 1000
+```
+$ source venv/bin/activate  
+```  
+```
+$ export ADMIN_TOKEN='jwt-token-of-the-admin-user'  
+```  
+```
+$ python3 scripts/chaos.py  
+```  
+or  
+
+```
+$ python3 scripts/chaos.py 1000
+```  
 
 The script above creates a total of given number of resources  
 (100 if no arguments specified).  
@@ -152,8 +176,9 @@ Pre-saved index-patterns and dashboards are available under
 **data/kibana/** folder, that can be imported to the newly launched
 kibana service.
 
-> $ ./import-kibana.sh
-
+```
+$ ./import-kibana.sh
+```
 Visit:  <http://localhost:5601> 
 
 Under 
@@ -165,26 +190,35 @@ posts, images and videos.
 
 Status of the currently running services / components can be seen with:
 
-> $ ./status.sh  
+```
+$ ./status.sh  
+```
 
 or
 
-> ./status.sh [mongo|kafka|spark|backend|frontend|elasticsearch|kibana]
-
+```
+$ ./status.sh [mongo|kafka|spark|backend|frontend|elasticsearch|kibana]
+```
 
 ## Stop services
 
-> $ ./stop.sh 
+```
+$ ./stop.sh 
+```
 
 or
 
-> ./stop.sh [mongo|kafka|spark|backend|frontend|elasticsearch|kibana]
+```
+$ ./stop.sh [mongo|kafka|spark|backend|frontend|elasticsearch|kibana]
+```
 
 
 ## Cleanup
 
 A cleanup script is provided to remove all application data, depdencies, docker images and logs, and restore the app to a pristine state.
 
-> $ ./cleanup.sh
+```
+$ ./cleanup.sh
+```
 
 ---

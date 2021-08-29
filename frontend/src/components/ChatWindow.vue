@@ -33,7 +33,7 @@
         data: function() {
             return {
                 currentUserId: 1234,
-                singleRoom: false,
+                singleRoom: true,
                 rooms: [],
                 // rooms:[
                 // {

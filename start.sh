@@ -93,7 +93,7 @@ run_spark() {
   fi
 }
 
-declare -a components=("users" "communities" "usergroups" "posts")
+declare -a components=("users" "communities" "posts")
 run_backend() {
 
   flask_run_port=${FLASK_RUN_PORT:-5000}

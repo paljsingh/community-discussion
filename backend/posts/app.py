@@ -7,11 +7,8 @@ from pymodm.files import File
 from pymodm.fields import CharField, DateTimeField, ImageField, FileField
 from pymongo.write_concern import WriteConcern
 
-from random import Random
-
 import uuid
 import logging.config
-from faker import Faker
 from datetime import datetime
 from common.customflask import CustomFlask
 from common.customverifier import CustomJWTVerifier
@@ -334,9 +331,6 @@ class Post(MongoModel):
 class TextPost(Post):
     content = CharField(required=True)
     name = CharField(required=False)
-
-    def fake_info(self):
-        self.content = Faker().paragraph(nb_sentences=Random().randint(20, 50))
 
     class Meta:
         write_concern = WriteConcern(j=True)

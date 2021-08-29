@@ -1,7 +1,11 @@
 <template>
     <v-col class="content">
         <v-card dark>
-            <v-card-title dark>
+            <v-label dark>
+                <h1>{{ this.community[0].name }}</h1>
+                <hr/>
+            </v-label>
+            <!-- <v-card-title dark>
                 <v-text-field
                     v-model="search"
                     append-icon="mdi-magnify"
@@ -11,53 +15,39 @@
                     v-on:change="this.fetchData"
                     dark
                 ></v-text-field>
-            </v-card-title>
+            </v-card-title> -->
             <v-data-table
                 :items="items"
                 :headers="headers"
                 :options.sync="options"
 
-                :single-select="singleSelect"
                 item-key="name"
                 v-model="selected"
-
-                class="elevation-1"
+                @click:row="handleClick"
+                
                 :footer-props="{
                     'items-per-page-text':'',
                     'items-per-page-options': []
                 }"
                 :server-items-length="total"
-                @update:pagination="handlePageChange"
-                @click:row="handleClick"
 
+                class="elevation-1"
+                loading
                 loading-text="Loading... Please wait"
-                loading: true
-                hide-default-header
-                dark
                 dense
+                dark
             >
-                <template v-slot:[`item.token`]="{item}">
-                    <CopyToken :item="item" />
-                </template>
             </v-data-table>
         </v-card>
-        <ChatWindow :selected="selected" />
     </v-col>
 </template>
 
 <script>
-    import axiosInstance from '../helpers/interceptor.js';
-    import CopyToken from './CopyToken.vue';
-    import authHelper from '../helpers/auth.js';
-    import ChatWindow from './ChatWindow.vue'; 
+    import axiosInstance from '../helpers/interceptor';
 
     export default {
-        name: 'Users',
-        mixins: [authHelper],
-        components: {
-            CopyToken,
-            ChatWindow    
-        },
+        name: 'Posts',
+        props: ['community'],
         watch: {
             options: {
                 handler() {
@@ -65,28 +55,35 @@
                 },
                 deep: true
             },
+            community: {
+                handler() {
+                    this.options.page = 1;
+                    this.fetchData();
+                }
+            }
         },
         data: function() {
             return {
                 items: [],
-
-                singleSelect: false,
                 selected: [],
-                
+                singleSelect: false,
+
                 headers: [
                     {
-                        text: 'User',
-                        value: 'name',
-                        filterable: true,
+                        text: "#",
+                        value: 'rowid',
                     },
                     {
-                        text: 'Copy JWT Token',
-                        value: 'token',
-                        filterable: false,
-                    }
+                        text: 'User',
+                        value: 'created_by',
+                    },
+                    {
+                        text: 'Post',
+                        value: 'content',
+                    },
                 ],
-                apiUrl: process.env.VUE_APP_USERS_API_ENDPOINT,
-                
+                apiUrl: process.env.VUE_APP_COMMUNITIES_POSTS_API_ENDPOINT,
+                usersApiUrl: process.env.VUE_APP_USERS_API_ENDPOINT,
                 search: "",
                 total: 0,
                 page: 1,
@@ -95,29 +92,31 @@
             }
         },
         methods: {
-            async fetchData() {
+            async fetchData () {
+                let apiUrl = this.apiUrl.replace('community_id', this.community[0]._id)
                 let params = Object.assign({}, this.options, {'name': this.search});
-                let response = (await axiosInstance.get(this.apiUrl, {params: params})).data;
+                let response = (await axiosInstance.get(apiUrl, {params: params})).data;
                 this.items = response.data;
 
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
+
+                // transform data (set ids, set user name instead of id)
+                for (let i=0; i< this.items.length; i++) {
+                    let response = (await axiosInstance.get(this.usersApiUrl + "/" + this.items[i].created_by)).data;
+                    this.items[i].created_by = response.name;
+
+                    this.items[i].rowid = i+1;
+                }
             },
-            handlePageChange(value) {
-                this.page = value;
-            },
-            handleClick(selectedUser) {
-                this.selected = [selectedUser];
+            // handlePageChange(value) {
+            //     console.log(value);
+            //     this.page = value;
+            // },
+            handleClick(selectedPost) {
+                this.selected = [selectedPost];
             },
         }
     };
 
 </script>
-
-<style scoped>
-.content {
-    position: relative;
-    width: 300px;
-    left: 10px;
-}
-</style>

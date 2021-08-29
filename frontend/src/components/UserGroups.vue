@@ -1,25 +1,39 @@
 <template>
-    <div class="usergroups">
-        <v-data-table
-            :items="items"
-            :headers="headers"
-            :options.sync="options"
-            :server-items-length="total"
-            hide-default-header
-            class="elevation-1"
-            loading
-            loading-text="Loading... Please wait"
-            dense
-            :search="search"
-            :footer-props="{
-                'items-per-page-text':'',
-                'items-per-page-options': []
-            }"
-            @update:pagination="handlePageChange"
-            dark
-        >
-        </v-data-table>
-    </div>
+    <v-col class="content">
+        <v-card dark>
+            <v-card-title dark>
+                <v-text-field
+                    v-model="search"
+                    append-icon="mdi-magnify"
+                    label="Search"
+                    single-line
+                    hide-details
+                    dark
+                    v-on:change="this.fetchData"
+                ></v-text-field>
+            </v-card-title>
+
+            <v-data-table
+                :items="items"
+                :headers="headers"
+                :options.sync="options"
+                :server-items-length="total"
+                hide-default-header
+                class="elevation-1"
+                loading
+                loading-text="Loading... Please wait"
+                dense
+                :search="search"
+                :footer-props="{
+                    'items-per-page-text':'',
+                    'items-per-page-options': []
+                }"
+                @update:pagination="handlePageChange"
+                dark
+            >
+            </v-data-table>
+        </v-card>
+    </v-col>
 </template>
 
 <script>
@@ -36,11 +50,12 @@
                     this.fetchData();
                 },
                 deep: true
-            }
+            },
         },
         data: function() {
             return {
                 items: [],
+                selected: null,
                 headers: [
                     {
                         text: 'User Group',
@@ -51,32 +66,33 @@
                 search: "",
                 options: {},
                 total: 0,
-
             }
         },
         methods: {
             async fetchData() {
-                let response = (await axiosInstance.get(this.apiUrl)).data;
+                let params = Object.assign({}, this.options, {'name': this.search});
+                let response = (await axiosInstance.get(this.apiUrl, {params: params})).data;
                 this.items = response.data;
+
                 this.total = response.pagination.total;
-                this.size = response.pagination.size;
+                this.size = (response.pagination.total-1) / response.pagination.page + 1;
             },
             handlePageChange(value) {
-                console.log(value)
                 this.page = value;
-            }
+            },
+            handleClick(selectedUsergroup) {
+                this.selected = [selectedUsergroup];
+            },
+
         }
     };
 
 </script>
 
 <style scoped>
-.usergroups {
-    position: fixed;
-    width: 250px;
-    left: 200px;
-    top: 60px;
-    font-size: 12px;
-    /* background: #000; */
+.content {
+    position: relative;
+    width: 300px;
+    left: 10px;
 }
 </style>
