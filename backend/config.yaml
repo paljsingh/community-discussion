@@ -20,3 +20,7 @@ max_per_page: 100
 
 # search
 min_search_len: 3
+
+
+images_dir: 'gridfs/images'
+videos_dir: 'gridfs/videos'

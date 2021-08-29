@@ -10,7 +10,8 @@ class Db:
         self.conf = Config.load()
         self.db = connect(self.conf.get('db_uri'), alias="my-app")
 
-    def retrieve(self, collection, filters: Dict = None, select_columns: List = None, to_son=True, pagination=True):    # noqa
+    def retrieve(self, collection, filters: Dict = None, select_columns: List = None, to_son=True, pagination=True,
+                 to_repr=False, repr_field=None):    # noqa
         (skip, limit) = FlaskUtils.get_skip_limit()
         (page, per_page) = FlaskUtils.get_url_args('page', 'itemsPerPage')
 
@@ -22,7 +23,16 @@ class Db:
             query_set = query_set.raw(filters)
             # skip = 0
 
-        items = [x.to_son() if to_son else x for x in query_set.skip(skip).limit(limit)]
+        items = []
+        for item in query_set.skip(skip).limit(limit):
+            # first repr, then to_son()
+            if to_repr and repr_field:
+                # item.file = 'foo'
+                print(item.file.value_from_object())
+                # print(repr(item.file))
+            if to_son:
+                item = item.to_son()
+            items.append(item)
         total_items = query_set.count()
 
         if pagination:

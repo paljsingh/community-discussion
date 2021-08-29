@@ -40,6 +40,8 @@
         </div>
         <div class="col2">
             <Posts :community="this.selected" v-if="this.selected.length > 0" />
+            <ImagePosts :community="this.selected" v-if="this.selected.length > 0" />
+            <VideoPosts :community="this.selected" v-if="this.selected.length > 0" />
         </div>
     </v-col>
 </template>
@@ -47,6 +49,8 @@
 <script>
     import axiosInstance from '../helpers/interceptor';
     import Posts from './Posts.vue';
+    import ImagePosts from './ImagePosts.vue';
+    import VideoPosts from './VideoPosts.vue';
 
     export default {
         name: 'Communities',
@@ -58,7 +62,7 @@
                 deep: true
             }
         },
-        components: {Posts},
+        components: {Posts, ImagePosts, VideoPosts},
         data: function() {
             return {
                 items: [],
@@ -107,18 +111,17 @@
 .content {
     position: relative;
     left: 10px;
-    height: 500px;
 }
 .col1 {
     position: relative;
     width: 20%;
     float: left;
-    left: 10px;
+    margin: 20px 0px 10px 0px;
 }
 .col2 {
     position: relative;
-    float: right;
-    width: 75%;
-    left: 10px;
+    float: left;
+    width: 70%;
+    padding: 10px 0px 10px 0px;
 }
 </style>

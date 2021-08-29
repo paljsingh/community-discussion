@@ -1,10 +1,12 @@
 import json
+import os
+import sys
 from functools import partial
 from http import HTTPStatus
 
 from pymodm import MongoModel
 from pymodm.files import File
-from pymodm.fields import CharField, DateTimeField, ImageField, FileField
+from pymodm.fields import CharField, DateTimeField
 from pymongo.write_concern import WriteConcern
 
 import uuid
@@ -19,6 +21,7 @@ from common.db import Db
 from common.utils import FlaskUtils
 from kafka import KafkaProducer
 import atexit
+from flask import send_file
 
 logging.config.fileConfig('../logging.conf')
 logging.basicConfig(level=logging.INFO)
@@ -34,6 +37,10 @@ atexit.register(partial(FlaskUtils.graceful_shutdown, db=db, kafka_producer=prod
 
 for cls in HTTPException.__subclasses__():
     app.register_error_handler(cls, CustomJWTVerifier.handle_error)
+
+data_dir = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "../../data")
+images_dir = os.path.join(data_dir, app.conf.get('images_dir'))
+videos_dir = os.path.join(data_dir, app.conf.get('videos_dir'))
 
 
 @app.route("/api/v1/communities/<community_id>/posts/new", methods=['POST'])
@@ -60,28 +67,34 @@ def create_new_post(community_id, my_id, is_admin=False):
 def create_new_image_post(community_id, my_id, is_admin=False):
     allowed_ext = ['png', 'jpg', 'jpeg', 'gif']
     filename = json.loads(request.form['json'])['name']
-    new_image_post = ImagePost(created_by=my_id, community_id=community_id)
 
-    if filename:
-        new_image_post.name = filename
+    if not filename:
+        abort(HTTPStatus.PRECONDITION_FAILED)
 
-    file_content = request.files['content']
     ext = filename.split('.')[1] if filename else None
 
-    if ext in allowed_ext:
-        new_image_post.file = file_content
-        new_image_post.save()
-        producer.send('images',
-                      '{id},{community_id},{usergroup_id},{created_by},{name},{creation_date},{action}'.format(
-                        id=new_image_post.id, community_id=community_id, usergroup_id='', created_by=my_id,
-                        name=new_image_post.name, creation_date=new_image_post.creation_date.isoformat(),
-                        action='new image')
-                      )
-
-        return app.make_response(json.dumps(
-            {'_id': new_image_post.id, 'name': new_image_post.name}))
-    else:
+    if ext not in allowed_ext:
         abort(HTTPStatus.PRECONDITION_FAILED)
+
+    image_id = uuid.uuid4()
+    filepath = os.path.join(images_dir, str(image_id))
+    file_content = request.files['content']
+    file_content.save(filepath)
+
+    new_image_post = ImagePost(id=image_id, created_by=my_id, community_id=community_id)
+    new_image_post.name = filename
+    new_image_post.save()
+
+    # new_image_post.file = file_content
+    producer.send('images',
+                  '{id},{community_id},{usergroup_id},{created_by},{name},{creation_date},{action}'.format(
+                    id=new_image_post.id, community_id=community_id, usergroup_id='', created_by=my_id,
+                    name=new_image_post.name, creation_date=new_image_post.creation_date.isoformat(),
+                    action='new image')
+                  )
+
+    return app.make_response(json.dumps(
+        {'_id': new_image_post.id, 'name': new_image_post.name}))
 
 
 @app.route("/api/v1/communities/<community_id>/videos/new", methods=['POST'])
@@ -89,25 +102,29 @@ def create_new_image_post(community_id, my_id, is_admin=False):
 def create_new_video_post(community_id, my_id, is_admin=False):
     allowed_ext = ['mp4', 'mkv', 'mov']
     filename = json.loads(request.form['json'])['name']
-    new_video_post = VideoPost(created_by=my_id, community_id=community_id)
 
-    file_content = request.files['content']
-    if filename:
-        new_video_post.name = filename
+    if not filename:
+        abort(HTTPStatus.PRECONDITION_FAILED)
 
     ext = filename.split('.')[1] if filename else None
 
-    if ext in allowed_ext:
-        new_video_post.file = file_content
-        new_video_post.save()
-        producer.send('videos', '{id},{community_id},{usergroup_id},{user_id},{name},{creation_date},{action}'.format(
-            id=new_video_post.id, community_id=community_id, usergroup_id='', user_id=my_id, name=new_video_post.name,
-            creation_date=new_video_post.creation_date.isoformat(), action='new video'))
-
-        return app.make_response(json.dumps(
-            {'_id': new_video_post.id, 'name': new_video_post.name}))
-    else:
+    if ext not in allowed_ext:
         abort(HTTPStatus.PRECONDITION_FAILED)
+
+    video_id = uuid.uuid4()
+    filepath = os.path.join(videos_dir, str(video_id))
+    file_content = request.files['content']
+    file_content.save(filepath)
+
+    new_video_post = VideoPost(id=video_id, created_by=my_id, community_id=community_id)
+    new_video_post.name = filename
+    new_video_post.save()
+    producer.send('videos', '{id},{community_id},{usergroup_id},{user_id},{name},{creation_date},{action}'.format(
+        id=new_video_post.id, community_id=community_id, usergroup_id='', user_id=my_id, name=new_video_post.name,
+        creation_date=new_video_post.creation_date.isoformat(), action='new video'))
+
+    return app.make_response(json.dumps(
+        {'_id': new_video_post.id, 'name': new_video_post.name}))
 
 
 @app.route("/api/v1/communities/<community_id>/posts", methods=['GET'])
@@ -312,6 +329,20 @@ def search_usergroup_posts(usergroup_id, my_id, is_admin=False):
 # api for invite status check.
 
 
+@app.route('/api/v1/image/<image_id>', methods=['GET'])
+def get_image_file(image_id):
+    img = db.get(ImagePost, image_id, to_son=False)
+    filepath = os.path.join(images_dir, image_id)
+    return send_file(filepath, download_name=img.name)
+
+
+@app.route('/api/v1/video/<video_id>', methods=['GET'])
+def get_video_file(video_id):
+    vid = db.get(VideoPost, video_id, to_son=False)
+    filepath = os.path.join(videos_dir, video_id)
+    return send_file(filepath, download_name=vid.name)
+
+
 class Post(MongoModel):
     """
     For now, using Post object for both usergroup/user chat messages and the community posts.
@@ -338,7 +369,7 @@ class TextPost(Post):
 
 
 class ImagePost(Post):
-    file = ImageField(required=True)
+    # file = FileField(required=True)
     name = CharField(required=False, blank=True)
 
     class Meta:
@@ -347,7 +378,7 @@ class ImagePost(Post):
 
 
 class VideoPost(Post):
-    file = FileField(required=True)
+    # file = FileField(required=True)
     name = CharField(required=False, blank=True)
 
     class Meta:

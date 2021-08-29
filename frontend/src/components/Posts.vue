@@ -5,17 +5,6 @@
                 <h1>{{ this.community[0].name }}</h1>
                 <hr/>
             </v-label>
-            <!-- <v-card-title dark>
-                <v-text-field
-                    v-model="search"
-                    append-icon="mdi-magnify"
-                    label="Search"
-                    single-line
-                    hide-details
-                    v-on:change="this.fetchData"
-                    dark
-                ></v-text-field>
-            </v-card-title> -->
             <v-data-table
                 :items="items"
                 :headers="headers"
@@ -109,10 +98,6 @@
                     this.items[i].rowid = i+1;
                 }
             },
-            // handlePageChange(value) {
-            //     console.log(value);
-            //     this.page = value;
-            // },
             handleClick(selectedPost) {
                 this.selected = [selectedPost];
             },

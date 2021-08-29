@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@algoz098/vue-player": "^0.4.3",
     "@mdi/font": "^5.9.55",
     "@okta/okta-auth-js": "^4.9.2",
     "@okta/okta-vue": "^3.1.0",

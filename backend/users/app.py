@@ -87,6 +87,7 @@ def get_all_users(my_id, is_admin=False):
 def get_user(user_id, my_id, is_admin=False):
     if my_id == user_id or is_admin:
         # return full info for self
+        print(user_id)
         return app.make_response(db.get(User, user_id))
     else:
         return app.make_response(db.get(User, user_id, select_columns=['name']))
