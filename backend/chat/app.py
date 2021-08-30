@@ -18,18 +18,24 @@ thread_lock = Lock()
 
 @app.route('/')
 def index():
+    print("app.route called")
     return render_template('index.html', async_mode=socket_.async_mode)
 
 
-@socket_.on('event', namespace='/message')
+@socket_.on('event', namespace='/')
 def test_message(message):
+    room_id = None
+    if message.get('data') and message['data'].get('roomId'):
+        room_id = message['data']['roomId']
+        print("------ received message on {}: {}".format(room_id, message))
     session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('response',
-         {'data': message['data'], 'count': session['receive_count']})
+    emit(room_id,
+         {'data': message['data'], 'count': session['receive_count']}, broadcast=True)
 
 
 @socket_.on('broadcast', namespace='/message')
 def test_broadcast_message(message):
+    print("broadcast...")
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('response',
          {'data': message['data'], 'count': session['receive_count']},
@@ -38,6 +44,8 @@ def test_broadcast_message(message):
 
 @socket_.on('disconnect', namespace='/message')
 def disconnect_request():
+    print("disconnect...")
+
     @copy_current_request_context
     def can_disconnect():
         disconnect()

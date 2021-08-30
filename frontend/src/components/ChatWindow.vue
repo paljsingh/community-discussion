@@ -1,6 +1,6 @@
 <template>
     <div class='chatwindow'>
-        <VueChat :current-user-id="currentUserId" :rooms="rooms" :messages="messages"
+        <VueChat :current-user-id="this.userid" :rooms="rooms" :messages="messages"
         :loading-rooms="false" :rooms-loaded="true" :messages-loaded="true"
         v-bind:single-room="singleRoom" :load-first-room="true" theme="dark"
         :show-add-room="false" :show-search="false" :rooms-list-opened="false"
@@ -12,7 +12,8 @@
 <script>
     import VueChat from 'vue-advanced-chat'
     import 'vue-advanced-chat/dist/vue-advanced-chat.css'
-    import io from "socket.io";
+
+    import io from "socket.io-client";
     import axiosInstance from '../helpers/interceptor';
     import authHelper from '../helpers/auth';
     
@@ -32,7 +33,8 @@
         },
         data: function() {
             return {
-                currentUserId: 1234,
+                // currentUserId: this.userid,
+                // currentUserName: this.username,
                 singleRoom: true,
                 rooms: [],
                 // rooms:[
@@ -77,6 +79,9 @@
                 // ],
                 users: [],
                 messages: [],
+                userid_map: {},
+                usergroup_id: null,
+                socket: null,
                 // messages: [
                 //     {
                 //         _id: 7890,
@@ -120,18 +125,18 @@
         //     this.rooms = response.data.usergroups;
         // },
         methods: {
-            async fetchData() {
-                let selectedUserId = this.selected[0]._id;
-                let selectedUserName = this.selected[0].name;
+            async fetch_room_info(selectedUser) {
+                console.log(this.claims);
+                let selectedUserId = selectedUser._id;
+                let selectedUserName = selectedUser.name;
 
                 // create a new room (or obtain one if already exists)
                 let response = (await axiosInstance.post(process.env.VUE_APP_USERGROUPS_API_ENDPOINT + "/new", {"user_id": selectedUserId})).data;
 
                 // map user ids to user names.
-                let user_id_map = {}
+                let userid_map = {}
 
                 // response contains a usergroup/room structure with id/name/tags and users list.
-                let usergroup_id = response._id
                 response.users.forEach((user) => {
                     let u = {}
                     u._id = user._id
@@ -140,13 +145,13 @@
                         state: 'online'
                     }
                     this.users.push(u)
-                    user_id_map[user._id] = user.name
+                    userid_map[user._id] = user.name
                 });
                 
                 // assign new room to vue-adv-chat rooms list.
-                // let num_rooms = this.rooms.length
+                this.usergroup_id = response._id;
                 let room = {
-                    roomId: 1,
+                    roomId: this.usergroup_id,
                     roomName: selectedUserName,
                     unreadCount: 0,     // hardcoded for now
                     index: 1,           // hardcoded for now
@@ -154,42 +159,94 @@
                     users: this.users,
                     typingUsers: []     // TODO
                 }
-                // for performance, as suggested here - https://github.com/antoine92190/vue-advanced-chat
-                this.rooms.push(room)
-                // this.rooms = [...this.rooms]
 
-                // fetch historical messages if any
-                let messageApiUrl = process.env.VUE_APP_USERGROUPS_MESSAGES_API_ENDPOINT.replace('usergroup_id', usergroup_id)
-                response = (await axiosInstance.get(messageApiUrl)).data;
+                return [userid_map, [room]]
+            },
+            async fetch_historical_messages() {
+                let messageApiUrl = process.env.VUE_APP_USERGROUPS_MESSAGES_API_ENDPOINT.replace('usergroup_id', this.usergroup_id)
+                let response = (await axiosInstance.get(messageApiUrl)).data;
                 let count = 0
+
+                let messages = []
                 response.data.forEach((message) => {
                     let m = {}
                     m._id = count
                     m.senderId = message.created_by
                     m.content = message.content?message.content:[]
-                    m.username = user_id_map[message.created_by]
+                    m.username = this.userid_map[message.created_by]
                     m.date = message.creation_date.substring(5, 15)     // TODO: parse date here
                     m.timestamp = message.creation_date.substring(17, 22)     // TODO: parse date here
                     m.file = {}
                     m.reactions = {}
-                    this.messages.push(m);
+                    messages.push(m);
 
                     count += 1
                 });
+                return messages;
             },
-            fetchMessages({ room, options }) {
-                console.log("fetch messages", room, options);
-                this.messagesLoaded = false
+            setup_websocket() {
+                console.log(this.socket);
+                if (this.socket) {
+                    return;
+                }
+                const socket = io("ws://localhost:5010", {transports: ["websocket", "polling"]});
+                socket.on('connect', () => {
+                    console.log(socket.id);
+                });
 
-                // use timeout to imitate async server fetched data
-                setTimeout(() => {
-                    this.messages = []
-                    this.messagesLoaded = true
-                })
+                socket.on(this.usergroup_id, (data) => {
+                    console.log("messages", this.messages);
+                    let index = this.messages.length;
+                    this.messages[index] = data.data;
+                    this.messages = [...this.messages];
+                    console.log("received", this.messages);
+                });
+
+                socket.on("disconnect", () => {
+                    console.log(socket.id);
+                });
+
+                this.socket = socket;
+                console.log(this.socket);
+
             },
-            sendMessageHandler(message) {
-                console.log(message.content)
-                console.log(message.file)
+            async fetchData() {
+                let selectedUser = this.selected[0];
+                let res = await this.fetch_room_info(selectedUser);
+                this.userid_map = res[0]
+                this.rooms = res[1]
+
+                // fetch historical messages if any
+                this.messages = await this.fetch_historical_messages();
+
+                this.setup_websocket();
+            },
+            // fetchMessages({ room, options }) {
+            //     console.log("fetch messages", room, options);
+            //     this.messagesLoaded = false
+
+            //     // use timeout to imitate async server fetched data
+            //     setTimeout(() => {
+            //         this.messages = []
+            //         this.messagesLoaded = true
+            //     })
+            // },
+            sendMessageHandler(msg) {
+                let count = this.messages.length;
+                if (msg.content || msg.file) {
+                    msg._id = count;
+                    msg.senderId = this.userid;
+                    // msg.content = msg.content?message.content:[]
+                    msg.username = this.username;
+                    msg.date = new Date();
+                    msg.timestamp = new Date().toTimeString();
+                    msg.roomId = this.usergroup_id;
+                    msg.reactions = {} 
+                    this.socket.emit('event', {data: msg});
+                }
+                // if (message.file) {
+                //     this.socket.emit('event', {data: message});
+                // }
             },
             // handleClick() {
                 //  console.log("handle click", this.selectedUser)
@@ -244,21 +301,9 @@
     //     }
     // }
         mounted: function() {
-            document.querySelector('vue-advanced-chat').currentUserId = this.currentUserId
-            document.querySelector('vue-advanced-chat').rooms = this.rooms
-            document.querySelector('vue-advanced-chat').messages = this.messages
-            let namespace = '/message';
-            let socket = io(namespace, {transports: ['websocket'], upgrade: false});
-
-            socket.on('connect', function() {
-                socket.emit('event', {data: 'connected to the SocketServer...'});
-            });
-
-            socket.on('response', function(msg, cb) {
-                console.log('<br>' + '<div/> logs #' + msg.count + ': ' + msg.data);
-                if (cb)
-                    cb();
-            });
+            document.querySelector('vue-advanced-chat').currentUserId = this.userid;
+            document.querySelector('vue-advanced-chat').rooms = this.rooms;
+            document.querySelector('vue-advanced-chat').messages = this.messages;
             // ('form#emit').submit(function(event) {
             //     socket.emit('event', {data: '#emit_data'});
             //     return false;
@@ -278,11 +323,6 @@
 
 <style scoped>
 .chatwindow {
-    /* background: #012; */
-    position: fixed;
-    width: 600px;
-    left: 400px;
-    top: 60px;  
+    padding-left: 20px;
 }
-
 </style>

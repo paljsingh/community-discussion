@@ -1,47 +1,51 @@
 <template>
     <v-col class="content">
-        <v-card dark>
-            <v-card-title dark>
-                <v-text-field
-                    v-model="search"
-                    append-icon="mdi-magnify"
-                    label="Search"
-                    single-line
-                    hide-details
-                    v-on:change="this.fetchData"
+        <div class="col1">
+            <v-card dark>
+                <v-card-title dark>
+                    <v-text-field
+                        v-model="search"
+                        append-icon="mdi-magnify"
+                        label="Search"
+                        single-line
+                        hide-details
+                        v-on:change="this.fetchData"
+                        dark
+                    ></v-text-field>
+                </v-card-title>
+                <v-data-table
+                    :items="items"
+                    :headers="headers"
+                    :options.sync="options"
+
+                    :single-select="singleSelect"
+                    item-key="name"
+                    v-model="selected"
+
+                    class="elevation-1"
+                    :footer-props="{
+                        'items-per-page-text':'',
+                        'items-per-page-options': []
+                    }"
+                    :server-items-length="total"
+                    @update:pagination="handlePageChange"
+                    @click:row="handleClick"
+
+                    :loading-text="loading_text"
+                    loading: true
+                    hide-default-header
                     dark
-                ></v-text-field>
-            </v-card-title>
-            <v-data-table
-                :items="items"
-                :headers="headers"
-                :options.sync="options"
-
-                :single-select="singleSelect"
-                item-key="name"
-                v-model="selected"
-
-                class="elevation-1"
-                :footer-props="{
-                    'items-per-page-text':'',
-                    'items-per-page-options': []
-                }"
-                :server-items-length="total"
-                @update:pagination="handlePageChange"
-                @click:row="handleClick"
-
-                loading-text="Loading... Please wait"
-                loading: true
-                hide-default-header
-                dark
-                dense
-            >
-                <template v-slot:[`item.token`]="{item}">
-                    <CopyToken :item="item" />
-                </template>
-            </v-data-table>
-        </v-card>
-        <ChatWindow :selected="selected" />
+                    dense
+                >
+                    <template v-slot:[`item.token`]="{item}">
+                        <CopyToken :item="item" />
+                    </template>
+                </v-data-table>
+            </v-card>
+        </div>
+        <div class="col2">
+            <ChatWindow :selected="selected" />
+        </div>
     </v-col>
 </template>
 
@@ -69,10 +73,9 @@
         data: function() {
             return {
                 items: [],
-
+                loading_text: "Loading... Please wait",
                 singleSelect: false,
-                selected: [],
-                
+                selected: [],                
                 headers: [
                     {
                         text: 'User',
@@ -102,6 +105,10 @@
 
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
+
+                if (this.total == 0) {
+                    this.loading_text = "no users."
+                }
             },
             handlePageChange(value) {
                 this.page = value;
@@ -117,7 +124,18 @@
 <style scoped>
 .content {
     position: relative;
-    width: 300px;
     left: 10px;
+}
+.col1 {
+    position: relative;
+    width: 20%;
+    float: left;
+    margin: 20px 0px 20px 0px;
+}
+.col2 {
+    position: relative;
+    float: left;
+    width: 70%;
+    margin: 20px 0px 20px 0px;
 }
 </style>

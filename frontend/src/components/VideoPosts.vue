@@ -36,7 +36,7 @@
 
 <script>
     import axiosInstance from '../helpers/interceptor';
-    import vuePlayer  from  '@algoz098/vue-player'
+    import vuePlayer  from  '@algoz098/vue-player';
 
     export default {
         name: 'Posts',

@@ -15,7 +15,8 @@ _ps_status() {
 backend_status() {
   printf "%-40s" "backend flask servers ... " && \
     _ps_status 'community-discussion/venv/bin/flask'
-
+}
+chat_status() {
   printf "%-40s" "backend chat server ..." && \
     _ps_status 'chat/app.py'
 }
@@ -107,6 +108,7 @@ case $# in
     elasticsearch_status
     kibana_status
     backend_status
+    chat_status
     frontend_status
     logs_status
     ;;

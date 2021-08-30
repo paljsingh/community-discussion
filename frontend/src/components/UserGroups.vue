@@ -21,7 +21,7 @@
                 hide-default-header
                 class="elevation-1"
                 loading
-                loading-text="Loading... Please wait"
+                :loading-text="loading_text"
                 dense
                 :search="search"
                 :footer-props="{
@@ -55,6 +55,7 @@
         data: function() {
             return {
                 items: [],
+                loading_text: "Loading... Please wait",
                 selected: null,
                 headers: [
                     {
@@ -76,6 +77,10 @@
 
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
+
+                if (this.total == 0) {
+                    this.loading_text = "no usergroups."
+                }
             },
             handlePageChange(value) {
                 this.page = value;

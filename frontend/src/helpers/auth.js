@@ -30,6 +30,19 @@ export default {
                 return ""
             }
         },
+        userid() {
+            this.force_update_counter;
+            let c = this.claims;
+            if (c) {
+                for (let i=0; i<c.length; i++) {
+                    if (c[i].claim === "sub") {
+                        return c[i].value;
+                    }
+                }
+            } else {
+                return ""
+            }
+        },
         usertype() {
             this.force_update_counter;
             return localStorage.getItem('usertype')

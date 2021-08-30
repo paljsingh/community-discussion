@@ -16,6 +16,9 @@ stop_backend() {
   printf "%-40s" "stopping backend flask servers ... " && \
     _kill_with_exit_status 'community-discussion/venv/bin/flask'
 
+}
+
+stop_chat() {
   printf "%-40s" "stopping backend chat server ..." && \
     _kill_with_exit_status 'chat/app.py'
 }
@@ -109,6 +112,7 @@ case $# in
     stop_elasticsearch
     stop_kibana
     stop_backend
+    stop_chat
     stop_frontend
     stop_logs
     ;;

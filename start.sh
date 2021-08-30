@@ -106,7 +106,9 @@ run_backend() {
     flask_run_port=$(expr $flask_run_port + 1)
     cd - 1>/dev/null
   done
+}
 
+run_chat() {
   export WEBSOCKET_PORT=${WEBSOCKET_PORT:-5010}
   cd backend/chat
   python3 app.py  &
@@ -168,6 +170,7 @@ $0 component [component] ...
   elasticsearch
   kibana
   backend
+  chat
   frontend
   logs
 EOF
@@ -180,6 +183,7 @@ case $# in
     run_spark
     run_mongo
     run_backend
+    run_chat
     run_elasticsearch
     run_kibana
     run_frontend

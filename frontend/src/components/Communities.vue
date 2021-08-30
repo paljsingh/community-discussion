@@ -31,7 +31,7 @@
 
                     class="elevation-1"
                     loading
-                    loading-text="Loading... Please wait"
+                    :loading-text="loading_text"
                     dense
                     dark
                 >
@@ -66,6 +66,7 @@
         data: function() {
             return {
                 items: [],
+                loading_text: "Loading... Please wait",
                 selected: [],
                 singleSelect: true,
 
@@ -95,6 +96,11 @@
 
                 this.total = response.pagination.total;
                 this.size = (response.pagination.total-1) / response.pagination.page + 1;
+
+                if (this.total == 0) {
+                    this.loading_text = "no communities."
+                }
+
             },
             handlePageChange(value) {
                 this.page = value;

@@ -20,6 +20,7 @@ from common.utils import FlaskUtils
 from kafka import KafkaProducer
 import atexit
 
+from faker import Faker
 from users.app import User
 
 logging.config.fileConfig('../logging.conf')
@@ -303,7 +304,6 @@ def create_temp_usergroup(my_id, is_admin=False):
 
     data = request.get_json()
     other_user_id = data.get('user_id')
-
     if not other_user_id:
         abort(HTTPStatus.PRECONDITION_FAILED)
 
@@ -314,12 +314,14 @@ def create_temp_usergroup(my_id, is_admin=False):
     )
 
     if not usergroups:
+        # create a new usergroup
+        usergroup_name = data.get('name')
+        if not usergroup_name:
+            f = Faker()
+            usergroup_name = '-'.join([f.word() for i in range(3)])
+        new_usergroup = Usergroup(created_by=my_id, name=usergroup_name)
 
-        new_usergroup = Usergroup(created_by=my_id)
-        # override with any data available in the post body.
-        if data and data.get('name'):
-            new_usergroup.name = data['name']
-        if data and data.get('tags'):
+        if data.get('tags'):
             new_usergroup.tags = data['tags']
         if user_ids:
             new_usergroup.users = user_ids
@@ -332,6 +334,7 @@ def create_temp_usergroup(my_id, is_admin=False):
             creation_date=datetime.utcnow().isoformat(), action='new usergroup', tags=str(new_usergroup.tags).replace(',', ' ')))
 
     else:
+        # one already exists for these users...
         usergroup = usergroups[0]
 
     users = db.retrieve(User, filters={'_id': {'$in': user_ids}}, select_columns=['_id', 'name'],
