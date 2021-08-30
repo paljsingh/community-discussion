@@ -25,7 +25,9 @@ Type "yes" to continue -
 EOF
 
 read x 
-if [ "$x" = "yes" ]; then
+if [ "$x" != "yes" ]; then
+  exit 1
+else
   rm -rf "$PWD/var/"
   rm -rf "$PWD/frontend/node_modules"
   rm -rf "$PWD/venv"

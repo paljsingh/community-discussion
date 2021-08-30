@@ -4,6 +4,7 @@ from flask import Flask, render_template, session, copy_current_request_context
 from flask_socketio import SocketIO, emit, disconnect
 from threading import Lock
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -24,13 +25,13 @@ def index():
 
 @socket_.on('event', namespace='/')
 def test_message(message):
-    room_id = None
     if message.get('data') and message['data'].get('roomId'):
         room_id = message['data']['roomId']
         print("------ received message on {}: {}".format(room_id, message))
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit(room_id,
-         {'data': message['data'], 'count': session['receive_count']}, broadcast=True)
+        print("emit event on {}".format(room_id))
+        emit(room_id, message, broadcast=True)
+    else:
+        print("no message data found")
 
 
 @socket_.on('broadcast', namespace='/message')
