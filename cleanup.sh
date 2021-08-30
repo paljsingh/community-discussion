@@ -29,7 +29,7 @@ if [ "$x" = "yes" ]; then
   rm -rf "$PWD/var/"
   rm -rf "$PWD/frontend/node_modules"
   rm -rf "$PWD/venv"
-  find "$PWD" -type f -name "c18n.log" | xargs rm
+  find "$PWD" -type f -name "c18n.log*" | xargs rm
 
   docker stop mongo zookeeper kafka spark elaasticsearch kibana
   docker rmi \
