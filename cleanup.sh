@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 
 cat << EOF
 WARNING WARNING WARNING
@@ -17,6 +16,8 @@ Running this script will:
 - delete all "c18n.log" log files found under $PWD/
 - delete kafka/zookeeper/mongo/elasticsearch/kibana/spark docker images.
 - delete docker network 'c18n-network'
+- delete __pycache__ directories.
+- delete data/gridfs/{images,videos}/* , that were created when uploading images and videos.
 
 YOU HAVE BEEN WARNED!
 
@@ -40,3 +41,8 @@ if [ "$x" = "yes" ]; then
     kibana:7.14.0 
     docker network rm c18n-network
 fi
+
+find . -type d -name "__pycache__" -exec rm -rfv {} \;
+rm -rf data/gridfs/images/* data/gridfs/videos/*
+
+
