@@ -28,19 +28,19 @@ read x
 if [ "$x" != "yes" ]; then
   exit 1
 else
-  rm -rf "$PWD/var/"
-  rm -rf "$PWD/frontend/node_modules"
-  rm -rf "$PWD/venv"
+#  rm -rf "$PWD/var/"
+#  rm -rf "$PWD/frontend/node_modules"
+#  rm -rf "$PWD/venv"
   find "$PWD" -type f -name "c18n.log*" | xargs rm
 
-  docker stop mongo zookeeper kafka spark elaasticsearch kibana
-  docker rmi \
-    bitnami/zookeeper:latest \
-    bitnami/kafka:latest \
-    xemuliam/mongo:latest \
-    bitnami/spark:latest \
-    docker.elastic.co/elasticsearch/elasticsearch:7.14.0 \
-    kibana:7.14.0 
+  docker stop mongo zookeeper kafka spark elasticsearch kibana
+#  docker rmi \
+#    bitnami/zookeeper:latest \
+#    bitnami/kafka:latest \
+#    xemuliam/mongo:latest \
+#    bitnami/spark:latest \
+#    docker.elastic.co/elasticsearch/elasticsearch:7.14.0 \
+#    kibana:7.14.0 
     docker network rm c18n-network
 fi
 
