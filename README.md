@@ -5,6 +5,16 @@
 The community-discussion (c18n) is a PoC app to demonstrate the use of streaming technologies
 to provide a community chat and discussion platform.
 
+Demo Vidoes
+
+1/2
+
+![Part 1 of 2](https://www.youtube.com/watch?v=SEgkeIV7R-g&list=PLHpNd3jR1FMYORmWIwEz2EUgYofL-O1Ps&index=3)
+
+2/2
+
+![Part 2 of 2](https://www.youtube.com/watch?v=8DpjFNXka5E&list=PLHpNd3jR1FMYORmWIwEz2EUgYofL-O1Ps&index=4)
+
 ## Components
 
 #### Frontend
@@ -38,10 +48,10 @@ dummy users (generated for demonstration purposes) is also stored in mongo db.
 The data stored in mongo db is immutable, any updates to the data is saved a new timestamped records. This persistence serves the data
 for batch layer.
 
-#### S3 / hdfs / GridFS (planned)
+#### S3 / hdfs (planned)
 
 Media files attached with the posts / messages are saved on a distributed storage layer.
-For the PoC, all the image and video files are < 16MB in size, that can be saved as a FileField in the mongo db itself.
+For the PoC, images / videos are saved locally using GridFS support.
 
 
 #### Spark streaming
@@ -50,12 +60,12 @@ Spark streaming serves for the speed layer of the lambda architecture. It genera
 processed event data to redis cache.
 
 
-#### Apache Spark
+#### Apache Spark (TBD)
 
-Apache Spark is used to process batch data and generate batch views.
+Apache Spark shall be used to process batch data and generate batch views.
 For the PoC, the batch layer is not yet implemented in absence of any heavy analytical processing.
 
-The overall architecture resembles more to the kappa architecture, with speed layer processing event in mini-batches at 1 second intervals.
+The overall architecture resembles more to the kappa architecture, with speed layer processing event in mini-batches at 5 second intervals.
 
 #### Elastic Search
 
