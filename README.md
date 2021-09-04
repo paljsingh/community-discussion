@@ -9,11 +9,12 @@ Demo Vidoes
 
 1/2
 
-![Part 1 of 2](https://www.youtube.com/watch?v=SEgkeIV7R-g&list=PLHpNd3jR1FMYORmWIwEz2EUgYofL-O1Ps&index=3)
+[![Part 1 of 2](https://img.youtube.com/vi/SEgkeIV7R-g/0.jpg)](https://www.youtube.com/watch?v=SEgkeIV7R-g&list=PLHpNd3jR1FMYORmWIwEz2EUgYofL-O1Ps&index=3)
 
 2/2
 
-![Part 2 of 2](https://www.youtube.com/watch?v=8DpjFNXka5E&list=PLHpNd3jR1FMYORmWIwEz2EUgYofL-O1Ps&index=4)
+[![Part 2 of 2](https://img.youtube.com/vi/8DpjFNXka5E/0.jpg)](https://www.youtube.com/watch?v=8DpjFNXka5E&list=PLHpNd3jR1FMYORmWIwEz2EUgYofL-O1Ps&index=4)
+
 
 ## Components
 
