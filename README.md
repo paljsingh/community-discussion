@@ -1,3 +1,11 @@
+*DISCLAIMER - before you clone this repo*
+
+## The Project got me 3 / 15 marks.
+
+*You have been warned !*
+
+---
+
 ## Community Discussion
 
 **SPA assignment 1**
