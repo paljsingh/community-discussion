@@ -8,12 +8,35 @@
 
 ## Community Discussion
 
-**SPA assignment 1**
-
 The community-discussion (c18n) is a PoC app to demonstrate the use of streaming technologies
 to provide a community chat and discussion platform.
 
-Demo Vidoes
+
+## Features
+
+- A Vue.js app for the UI
+- Python/Flask server endpoints for users, communities, usergroups apis
+- Third party authentication with okta
+- Custom user authentication with JWT tokens
+- Websocket based chat server with flask-socketio
+- Fake data generation via Faker
+- Streaming pipeline making use of Apache Kafka, Spark+pyspark, Elasticsearch and Kibana
+- Kafka producers and consumers
+- Spark streaming scripts
+- Distributed database storage using mongo db
+- Video and Image upload ability
+- UI interface for viewing user posts, images and videos
+- UI chatroom interface using vue-advanced-chat
+- Scripts for emulating various workflows like user/community/usergroup creation, user content creation etc.
+- Extensible, Configurable setup for streaming pipeline
+- Scripts for easy setup/teardown/start/stop of services
+- Analytics dashboards
+- Lightweight, minimal configuration for each of the services to run everything on a single node
+- Closely follows kappa architecture
+- 
+
+
+## Demo Vidoes
 
 1/2
 
@@ -22,6 +45,7 @@ Demo Vidoes
 2/2
 
 [![Part 2 of 2](https://img.youtube.com/vi/8DpjFNXka5E/0.jpg)](https://www.youtube.com/watch?v=8DpjFNXka5E&list=PLHpNd3jR1FMYORmWIwEz2EUgYofL-O1Ps&index=4)
+
 
 
 ## Components
