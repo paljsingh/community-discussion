@@ -20,7 +20,9 @@ to provide a community chat and discussion platform.
 - Custom user authentication with JWT tokens
 - Websocket based chat server with flask-socketio
 - Fake data generation via Faker
-- Streaming pipeline making use of Apache Kafka, Spark+pyspark, Elasticsearch and Kibana
+- Streaming pipeline making use of Apache Kafka, Spark+pyspark, Elasticsearch
+- Analytics portal via Kibana
+- Preconfigured dashboards and Elasticsearch integration with Kibana
 - Kafka producers and consumers
 - Spark streaming scripts
 - Distributed database storage using mongo db
@@ -30,7 +32,6 @@ to provide a community chat and discussion platform.
 - Scripts for emulating various workflows like user/community/usergroup creation, user content creation etc.
 - Extensible, Configurable setup for streaming pipeline
 - Scripts for easy setup/teardown/start/stop of services
-- Analytics dashboards
 - Lightweight, minimal configuration for each of the services to run everything on a single node
 - Closely follows kappa architecture
 - 
